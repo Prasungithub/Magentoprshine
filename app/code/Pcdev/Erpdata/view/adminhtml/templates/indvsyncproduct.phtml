@@ -1,0 +1,80 @@
+<style>
+.actions-toolbar{margin: 10px 0 0 0;}
+input{border: 1px solid #aba8a8;margin: 10px 0 0 0;}
+</style>
+<?php echo __('Individual Product Price Update'); ?>
+<br/>
+<div>
+<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/indvproductupdatepost'; ?>" id="indvpriceupdate-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="priceupdate" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<input type="text" name="indvpriceupdate_sku" value="" placeholder="Enter SKU / SKUs" required />
+	<p><?= $block->escapeHtml(__('Enter one or multiple sku by comma separator. i.e. CFCN0002,RNPE0051,PNCA0035')) ?></p>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="indvpriceupdate" title="<?= $block->escapeHtmlAttr(__('Individual Product Price Update')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Price Update')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+<br/>
+
+<?php echo __('Individual Product Update Item On-hand'); ?>
+<br/>
+<div>
+<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/indvproductupdatepost'; ?>" id="indvonhandupdate-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="onhandupdate" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<input type="text" name="indvonhandupdate_sku" value="" placeholder="Enter SKU / SKUs" required />
+	<p><?= $block->escapeHtml(__('Enter one or multiple sku by comma separator. i.e. CFCN0002,RNPE0051,PNCA0035')) ?></p>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="indvonhandupdate" title="<?= $block->escapeHtmlAttr(__('Individual Product Update Item On-hand')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Item On-hand')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+
+<?php echo __('Individual Product Item Data Update'); ?>
+<br/>
+<div>
+<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/indvproductupdatepost'; ?>" id="indvitemdataupdate-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="itemdataupdate" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<input type="text" name="indvitemdataupdate_sku" value="" placeholder="Enter SKU / SKUs" required />
+	<p><?= $block->escapeHtml(__('Enter one or multiple sku by comma separator. i.e. CFCN0002,RNPE0051,PNCA0035')) ?></p>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="indvitemdataupdate" title="<?= $block->escapeHtmlAttr(__('Individual Product Item Data Update')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Item Data')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+
+<?php echo __('Individual Have It Your Way Products Update'); ?>
+<br/>
+<div>
+<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/indvproductupdatepost'; ?>" id="indvhaveitwaydataupdate-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="haveitwaydataupdate" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<input type="text" name="indvhaveitwaydataupdate_sku" value="" placeholder="Enter SKU / SKUs" required />
+	<p><?= $block->escapeHtml(__('Enter one or multiple sku by comma separator. i.e. CFCN0002,RNPE0051,PNCA0035')) ?></p>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="indvhaveitwaydataupdate" title="<?= $block->escapeHtmlAttr(__('Individual Have It Your Way Item Data Update')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Have It Your Way Item Data')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>

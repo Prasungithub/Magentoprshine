@@ -1,0 +1,713 @@
+<style>
+.actions-toolbar{margin: 10px 0 0 0;}
+input{border: 1px solid #aba8a8;margin: 10px 0 0 0;}
+</style>
+<?php 
+$AuthTocken = $block->getAuthenticationTocken();
+$Params = $this->getRequest()->getParams();
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$connection = $objectManager->get('Magento\Framework\App\ResourceConnection')->getConnection();
+$CompanyId = $this->helper('Pcdev\Erpdata\Helper\Data')->getCompanyId();
+$CustAccount = $this->helper('Pcdev\Erpdata\Helper\Data')->getCustAccount();
+$DataOrigin = $this->helper('Pcdev\Erpdata\Helper\Data')->getDataOrigin();
+
+
+if(isset($AuthTocken['access_token']) && $AuthTocken['access_token']){
+	$access_token = $AuthTocken['access_token'];
+	
+	/*Sales Order Sync Start*/
+	if(isset($Params['salesordersync']) && isset($Params['orderno']) && ($Params['orderno'] > 0)){
+		
+		$orderdata =[];		
+		$increment_id = $Params['orderno'];		
+		$orderload = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($increment_id);		
+		$orderId = $orderload->getId();		
+		$order = $objectManager->create('\Magento\Sales\Model\OrderRepository')->get($orderId);	
+		
+		$is_sync = $order->getIsSync();		
+		$paymentData = $order->getPayment();
+		$paymentMethod = $paymentData->getMethod();
+		$PaymTermId = '';		
+		if($paymentMethod == 'ccavenue'){
+			$PaymTermId = 'Card';			
+		} elseif($paymentMethod == 'cashondelivery'){
+			$PaymTermId = 'Cash';
+		}			
+		$order_status = $order->getStatus();  //pending, processing
+		$DeliveryName = $order->getCustomerFirstname().' '.$order->getCustomerLastname();
+		$deliverydateTableName = $connection->getTableName('amasty_deliverydate_deliverydate_order');
+		
+		$deliverydate = '';
+		$DeliveryRemarks = '';
+		$tax_percent = 0;
+		
+		$finddeliverydateQuery = "SELECT `date`, `comment` FROM " . $deliverydateTableName . " WHERE `order_id`='".$orderId."'";
+		$finddeliverydateResults = $connection->fetchAll($finddeliverydateQuery);		
+		if(count($finddeliverydateResults)>0){
+			$deliverydate = $finddeliverydateResults[0]['date'];
+			$DeliveryRemarks = $finddeliverydateResults[0]['comment'];
+		}
+		
+		$ShippingMethod = $order->getShippingMethod();	
+		$discount_description = $order->getDiscountDescription();
+		$ChargeCode = '';
+		if($is_sync == '0' && ($order_status == 'pending' || $order_status == 'processing')){
+			$SalesChargesList = [];
+			if($order->getShippingDescription()){
+				$ShippingDescriptionArr = explode(' - ',$order->getShippingDescription());
+				$ShippingDescription = $ShippingDescriptionArr[1];
+				if($ShippingMethod){
+					$ChargeCode = 'Transport';
+				}
+				
+				if($order->getShippingAmount() > 0){
+					$SalesChargesList[] = ['EComSalesId'=>$order->getIncrementId(),'ChargeCode'=>$ChargeCode,'ChargeAmount'=>'+'.$order->getShippingAmount(),'ChargeDescription'=>$ShippingDescription];
+				}
+				
+			}
+
+			$SalesLineList = [];
+			foreach($order->getAllItems() as $orderitem){
+					
+				$configurableSku = '';
+				$SalesUnitId = '';
+				$qty_ordered = 0;
+				$SalesPrice = 0;
+				$DiscAmountPerQty = 0;
+				$FOCReason = '';
+				$PackageType = '';
+				$discount_amount = $orderitem->getDiscountAmount();
+				if($discount_amount > 0){
+					
+					$applied_rule_ids = $order->getAppliedRuleIds();
+					if(empty($discount_description) && !empty($applied_rule_ids)){
+						$applied_rule_ids = explode(',',$applied_rule_ids);
+						$cust_description = '';
+						if(count($applied_rule_ids) > 0){
+							foreach($applied_rule_ids as $applied_rule_id){
+								$appliedRuleQuery = "SELECT `description` FROM `salesrule` WHERE `rule_id`='".$applied_rule_id."'";
+								$appliedRuleResults = $connection->fetchAll($appliedRuleQuery);		
+								if(count($appliedRuleResults)>0){
+									if(!empty($appliedRuleResults[0]['description'])){
+										$description_text = $appliedRuleResults[0]['description'];
+										$cust_description = $cust_description .', '.$description_text;
+									}
+								}						
+								
+							}
+							
+							if(!empty($cust_description)){
+								$discount_description = trim($cust_description,",");
+							}
+						}
+					}					
+					
+					$FOCReason = $discount_description;
+				}
+				
+				if($orderitem->getProductType() == 'configurable'){
+					$p_id = $orderitem->getProductId();
+					$loadproduct = $objectManager->create('Magento\Catalog\Model\Product')->load($p_id);
+					$configurableSku = $loadproduct->getSku();
+					
+					if($orderitem->getProductOptions()){
+						$ProductOptions = $orderitem->getProductOptions();
+						
+						if($ProductOptions['attributes_info'][0]['label'] == 'Size'){
+							$SalesUnitId = $ProductOptions['attributes_info'][0]['value'];
+						}
+
+						if($ProductOptions['options'][0]['label'] == 'Packing'){
+							$PackageType = $ProductOptions['options'][0]['value'];
+						}	
+					}
+					
+					$qty_ordered = $orderitem->getQtyOrdered();
+					$SalesPrice = $orderitem->getPriceInclTax();
+					$DiscAmountAllQty = $orderitem->getDiscountAmount();
+					$tax_percent = $orderitem->getTaxPercent();
+					$DiscAmountPerQty = 0;
+					if($DiscAmountAllQty > 0){
+						$DiscAmountPerQty = $DiscAmountAllQty / $qty_ordered;
+					}
+					
+					$SalesLineList[] = [
+						'EComSalesId'=>$order->getIncrementId(),
+						'EComInventTransId'=>$orderitem->getItemId(),
+						'ItemId'=>$configurableSku,
+						'SalesUnitId'=>$SalesUnitId,
+						'SalesQty'=>$qty_ordered, 
+						'SalesPrice'=>$SalesPrice, 
+						'DiscAmountPerQty'=>$DiscAmountPerQty, 
+						'FOCReason'=>$FOCReason,
+						'PackageType'=>$PackageType,
+						'TaxRate'=>$tax_percent
+					];			
+					
+				}
+				
+				/*Bundle Product Start*/
+				if($orderitem->getProductType() == 'bundle'){
+
+					$p_id = $orderitem->getProductId();
+					$bundle_item_id = $orderitem->getItemId();
+					$loadproduct = $objectManager->create('Magento\Catalog\Model\Product')->load($p_id);
+					$bundleSku = $loadproduct->getSku();
+				}
+				if(isset($bundle_item_id)){
+					if($orderitem->getProductType() == 'simple' && $orderitem->getParentItemId() == $bundle_item_id){
+						
+						if($orderitem->getProductOptions()){
+							$ProductOptions = $orderitem->getProductOptions();
+							
+							/*if($ProductOptions['attributes_info'][0]['label'] == 'Size'){
+								$SalesUnitId = $ProductOptions['attributes_info'][0]['value'];
+							}*/
+							$SalesUnitId = '50gm';
+
+							/*if($ProductOptions['options'][0]['label'] == 'Packing'){
+								$PackageType = $ProductOptions['options'][0]['value'];
+							}*/	
+							$PackageType = '';
+						}
+						
+						$qty_ordered = $orderitem->getQtyOrdered();
+						$SalesPrice = $orderitem->getPriceInclTax();
+						$DiscAmountAllQty = $orderitem->getDiscountAmount();
+						$tax_percent = $orderitem->getTaxPercent();
+						$DiscAmountPerQty = 0;
+						if($DiscAmountAllQty > 0){
+							$DiscAmountPerQty = $DiscAmountAllQty / $qty_ordered;
+						}
+						
+						$bundle_simple_sku_arr = explode("-50g",$orderitem->getSku());
+						$bundle_simple_sku = $bundle_simple_sku_arr[0];
+						
+						$SalesLineList[] = [
+							'EComSalesId'=>$order->getIncrementId(),
+							'EComInventTransId'=>$orderitem->getItemId(),
+							'ItemId'=>$bundle_simple_sku,
+							'SalesUnitId'=>$SalesUnitId,
+							'SalesQty'=>$qty_ordered, 
+							'SalesPrice'=>$SalesPrice, 
+							'DiscAmountPerQty'=>$DiscAmountPerQty, 
+							'FOCReason'=>$FOCReason,
+							'PackageType'=>$PackageType,
+							'TaxRate'=>$tax_percent
+						];
+					}
+				}
+				/*Bundle Product End*/	
+
+				/*Simple Product Start*/
+				if($orderitem->getProductType() == 'simple' && is_null($orderitem->getParentItemId()) && empty($orderitem->getParentItemId())){
+					
+					if($orderitem->getProductOptions()){
+						$ProductOptions = $orderitem->getProductOptions();
+						
+						if(isset($ProductOptions['attributes_info'][0]['label']) && isset($ProductOptions['attributes_info'][0]['value']) && $ProductOptions['attributes_info'][0]['label'] == 'Size'){
+							$SalesUnitId = $ProductOptions['attributes_info'][0]['value'];
+						} else {
+							$SalesUnitId = '50gm';
+						}
+						
+						if(isset($ProductOptions['options'][0]['label']) && isset($ProductOptions['options'][0]['value']) && $ProductOptions['options'][0]['label'] == 'Packing'){
+							$PackageType = $ProductOptions['options'][0]['value'];
+						} else {
+							$PackageType = '';
+						}
+					}
+					
+					$qty_ordered = $orderitem->getQtyOrdered();
+					$SalesPrice = $orderitem->getPriceInclTax();
+					$DiscAmountAllQty = $orderitem->getDiscountAmount();
+					$tax_percent = $orderitem->getTaxPercent();
+					$DiscAmountPerQty = 0;
+					if($DiscAmountAllQty > 0){
+						$DiscAmountPerQty = $DiscAmountAllQty / $qty_ordered;
+					}
+					
+					$bundle_simple_sku_arr = explode("-50g",$orderitem->getSku());
+					$bundle_simple_sku = $bundle_simple_sku_arr[0];
+					
+					$SalesLineList[] = [
+						'EComSalesId'=>$order->getIncrementId(),
+						'EComInventTransId'=>$orderitem->getItemId(),
+						'ItemId'=>$bundle_simple_sku,
+						'SalesUnitId'=>$SalesUnitId,
+						'SalesQty'=>$qty_ordered, 
+						'SalesPrice'=>$SalesPrice, 
+						'DiscAmountPerQty'=>$DiscAmountPerQty, 
+						'FOCReason'=>$FOCReason,
+						'PackageType'=>$PackageType,
+						'TaxRate'=>$tax_percent
+					];
+				}				
+				/*Simple Product End*/
+				
+			}
+			
+			$ShippingAddress = $order->getShippingAddress();			
+			$order_tax_amount = $order->getTaxAmount();
+			$InclTax = 'Yes';
+			if($order_tax_amount > 0){
+				$InclTax = 'Yes';
+			} else {
+				$InclTax = 'No';
+			}
+			
+			$DeliveryCountryRegionId = $ShippingAddress->getCountryId();
+			if($DeliveryCountryRegionId == 'AE'){
+				$DeliveryCountryRegionId = 'ARE';
+			}
+			$DeliveryAddressArr = $ShippingAddress->getStreet();
+			$DeliveryAddress = implode(', ',$DeliveryAddressArr);
+			$PhoneMobile = $ShippingAddress->getTelephone();
+			$customer_id = $order->getCustomerId();
+			if(empty($PhoneMobile) && !empty($customer_id)){
+				$phoneMobileQuery = "SELECT `customer_entity_varchar`.`value` FROM `eav_attribute` LEFT JOIN `customer_entity_varchar` ON `eav_attribute`.`attribute_id`= `customer_entity_varchar`.`attribute_id` WHERE `customer_entity_varchar`.`entity_id` = '".$customer_id."' AND `eav_attribute`.`attribute_code` = 'mobile'";
+				
+				$phoneMobileResults = $connection->fetchAll($phoneMobileQuery);		
+				if(count($phoneMobileResults)>0){
+					$PhoneMobile = $phoneMobileResults[0]['value'];					
+				}
+			}
+			
+			$quote_id = $order->getQuoteId();
+			if(empty($PhoneMobile) && !empty($quote_id)){
+				$phoneMobileQuoteQuery = "SELECT `telephone`, `address_type` FROM `quote_address` WHERE `quote_id`='".$quote_id."'";
+				$phoneMobileQuoteResults = $connection->fetchAll($phoneMobileQuoteQuery);		
+				if(count($phoneMobileQuoteResults)>0){
+					$PhoneMobileShip = '';
+					$PhoneMobileBill = '';
+					foreach($phoneMobileQuoteResults as $phoneMobileQuoteVal){				
+				
+						if(!empty($phoneMobileQuoteVal['telephone']) && $phoneMobileQuoteVal['address_type'] == 'shipping'){
+							$PhoneMobileShip = $phoneMobileQuoteVal['telephone'];
+						}
+						
+						if(!empty($phoneMobileQuoteVal['telephone']) && $phoneMobileQuoteVal['address_type'] == 'billing'){
+							$PhoneMobileBill = $phoneMobileQuoteVal['telephone'];
+						}						
+					}
+					
+					if(!empty($PhoneMobileShip)){
+						$PhoneMobile = $PhoneMobileShip;
+					}
+					
+					if(empty($PhoneMobile) && !empty($PhoneMobileBill) ){
+						$PhoneMobile = $PhoneMobileBill;
+					}						
+				} 
+			}
+
+			if(empty($PhoneMobile) && !empty($quote_id)){
+				$phoneMobileQuoteTablQuery = "SELECT `mobileno` FROM `quote` WHERE `entity_id`='".$quote_id."'";
+				$phoneMobileQuoteTablResults = $connection->fetchAll($phoneMobileQuoteTablQuery);		
+				if(count($phoneMobileQuoteTablResults)>0){
+					$PhoneMobile = $phoneMobileQuoteTablResults[0]['mobileno'];	
+				}
+			}				
+			
+			$RequestedDate = date('Y-m-d',strtotime($order->getCreatedAt()));
+			
+			$shippingTaxCal = 0;
+			if($order->getShippingAmount() > 0 && ($tax_percent > 0)){
+				$shippingTaxCal = ($order->getShippingAmount() * $tax_percent) / (100 + $tax_percent);
+				$shippingTaxCal = round($shippingTaxCal, 4);
+			}
+			$AllTaxCalculated = $order->getTaxAmount() + $shippingTaxCal;
+
+			$orderdata = [
+				'CustAccount'=>$CustAccount,
+				'DataOrigin'=>$DataOrigin,
+				'DeliveryName'=>$DeliveryName,
+				'DeliveryAddress'=>$DeliveryAddress,
+				'DeliveryCity'=>$ShippingAddress->getCity(),
+				'DeliveryCountryRegionId'=>$DeliveryCountryRegionId,
+				'DeliveryDate'=>$deliverydate,
+				'DeliveryRemarks'=>$DeliveryRemarks,
+				'EComSalesId'=>$order->getIncrementId(),
+				'Email'=>$order->getCustomerEmail(),
+				'InclTax'=>$InclTax,
+				'PaymTermId'=>$PaymTermId,
+				'PhoneMobile'=>$PhoneMobile,
+				'RequestedDate'=>$RequestedDate,
+				'CompanyId'=>$CompanyId,
+				'SlefPickup'=>'no',
+				'SubTotal'=>$order->getSubtotal(),
+				'VATAmount'=>$order->getTaxAmount(),
+				'OrderTotal'=>$order->getGrandTotal(),
+				'SalesChargesList'=>$SalesChargesList,
+				'SalesLineList'=>$SalesLineList
+			];
+
+			//echo '<pre>';
+			// print_r($order->debug());
+			//print_r($orderdata);
+			//die();			
+			
+			$OrderSyncArr = $block->SalesOrderSync($access_token,$orderdata);
+			
+			if($OrderSyncArr['salesorderdata'] && isset($OrderSyncArr['salesorderdata']->SalesResult) && $OrderSyncArr['salesorderdata']->SalesResult == 'True'){
+				$is_sync = 1;
+				$erpSalesId = $OrderSyncArr['salesorderdata']->SalesId;
+				$erpsalesremarks = $OrderSyncArr['salesorderdata']->SalesRemarks;
+				$order->setIsSync($is_sync);
+				$order->setErpsalesid($erpSalesId);
+				$order->setErpsalesremarks($erpsalesremarks);
+				$order->save();
+				
+				echo '<br/>';
+				echo $erpSalesId;
+				echo '<br/>';
+				echo $erpsalesremarks;
+				echo '<br/>';
+			}
+			echo '<pre>';
+			print_r($OrderSyncArr);
+			die();
+		}
+	}
+	/*Sales Order Sync End*/
+	
+	/*Payment Journal Start*/
+	if(isset($Params['paymentjournal']) && isset($Params['pj_orderno']) && ($Params['pj_orderno'] > 0)){
+		$orderdata =[];		
+		$increment_id = $Params['pj_orderno'];		
+		$PaymentJournalArr = $block->PaymentJournal($access_token,$increment_id);
+		
+		echo '<pre>';
+		print_r($PaymentJournalArr);
+		die();		
+		
+	}	
+	/*Payment Journal End*/		
+	
+	/*Sales order status Start*/
+	if(isset($Params['salesorderstatus']) && isset($Params['sos_orderno']) && ($Params['sos_orderno'] > 0)){
+		$orderdata =[];		
+		$increment_id = $Params['sos_orderno'];		
+		$loadorder = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($increment_id);
+		
+		$orderId = $loadorder->getId();
+		
+		$SalesOrderStatusArr = $block->SalesOrderStatus($access_token,$increment_id);
+		
+		echo '<pre>';
+		print_r($SalesOrderStatusArr);
+		die();
+		
+		/*echo '<pre>';
+		print_r($loadorder->debug());
+		die();*/
+		
+	}	
+	/*Sales order status End*/
+	
+	/*Sales Invoice Start*/
+	if(isset($Params['salesinvoices']) && isset($Params['soi_orderno']) && ($Params['soi_orderno'] > 0)){
+		$orderdata =[];		
+		$increment_id = $Params['soi_orderno'];		
+		$loadorder = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($increment_id);
+		
+		$orderId = $loadorder->getId();
+		$lastInsertId = 0;
+		
+		$salesInvoicesArr = $block->SalesInvoices($access_token,$increment_id);
+		
+		if($salesInvoicesArr['salesinvoicesdata'] && isset($salesInvoicesArr['salesinvoicesdata'][0]->SalesResult) && $salesInvoicesArr['salesinvoicesdata'][0]->SalesResult == 'True'){		
+			// $salesinvoicesdataArr = serialize($salesInvoicesArr['salesinvoicesdata']);
+			// $loadorder->setErpinvoice($salesinvoicesdataArr);
+			// $loadorder->save();		
+			$erpSalesId = $salesInvoicesArr['salesinvoicesdata'][0]->SalesId;
+			$erpInvoiceId = $salesInvoicesArr['salesinvoicesdata'][0]->InvoiceId;
+			$erpInvoicesTableName = $connection->getTableName('erp_invoices');
+			$invoicedateQuery = "SELECT `i_id`, `increment_id`, `invoiceid` FROM " . $erpInvoicesTableName . " WHERE `invoiceid`='".$erpInvoiceId."'";
+			$invoicedateResults = $connection->fetchAll($invoicedateQuery);
+			
+			if(count($invoicedateResults) == 0){
+				$invoicedateInst = [];
+				
+				$erpid = '$id';
+				$invoicedateInst['erp_id'] = $salesInvoicesArr['salesinvoicesdata'][0]->$erpid;
+				$invoicedateInst['CustAccount'] = $salesInvoicesArr['salesinvoicesdata'][0]->CustAccount;
+				$invoicedateInst['DataOrigin'] = $salesInvoicesArr['salesinvoicesdata'][0]->DataOrigin;
+				$invoicedateInst['DeliveryAddress'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryAddress;
+				$invoicedateInst['DeliveryCity'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryCity;
+				$invoicedateInst['DeliveryCountryRegionId'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryCountryRegionId;
+				$invoicedateInst['DeliveryDate'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryDate;
+				$invoicedateInst['EComSalesId'] = $salesInvoicesArr['salesinvoicesdata'][0]->EComSalesId;
+				$invoicedateInst['Email'] = $salesInvoicesArr['salesinvoicesdata'][0]->Email;
+				$invoicedateInst['InclTax'] = $salesInvoicesArr['salesinvoicesdata'][0]->InclTax;
+				$invoicedateInst['PaymTermId'] = $salesInvoicesArr['salesinvoicesdata'][0]->PaymTermId;
+				$invoicedateInst['PhoneMobile'] = $salesInvoicesArr['salesinvoicesdata'][0]->PhoneMobile;
+				$invoicedateInst['RequestedDate'] = $salesInvoicesArr['salesinvoicesdata'][0]->RequestedDate;
+				$invoicedateInst['SalesId'] = $salesInvoicesArr['salesinvoicesdata'][0]->SalesId;
+				$invoicedateInst['SalesRemarks'] = $salesInvoicesArr['salesinvoicesdata'][0]->SalesRemarks;
+				$invoicedateInst['SalesResult'] = $salesInvoicesArr['salesinvoicesdata'][0]->SalesResult;
+				$invoicedateInst['CompanyId'] = $salesInvoicesArr['salesinvoicesdata'][0]->CompanyId;
+				$invoicedateInst['DlvModeId'] = $salesInvoicesArr['salesinvoicesdata'][0]->DlvModeId;
+				$invoicedateInst['SubTotal'] = $salesInvoicesArr['salesinvoicesdata'][0]->SubTotal;
+				$invoicedateInst['VATAmount'] = $salesInvoicesArr['salesinvoicesdata'][0]->VATAmount;
+				$invoicedateInst['OrderTotal'] = $salesInvoicesArr['salesinvoicesdata'][0]->OrderTotal;
+				$invoicedateInst['InvoiceId'] = $salesInvoicesArr['salesinvoicesdata'][0]->InvoiceId;
+				$invoicedateInst['AWBNumber'] = $salesInvoicesArr['salesinvoicesdata'][0]->AWBNumber;
+				$invoicedateInst['InvoiceDate'] = $salesInvoicesArr['salesinvoicesdata'][0]->InvoiceDate;
+				$invoicedateInst['ChargeAmount'] = $salesInvoicesArr['salesinvoicesdata'][0]->ChargeAmount;
+				$invoicedateInst['AmountInWords'] = $salesInvoicesArr['salesinvoicesdata'][0]->AmountInWords;
+				$invoicedateInst['DeliveryName'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryName;
+				$invoicedateInst['DeliveryTo'] = $salesInvoicesArr['salesinvoicesdata'][0]->DeliveryTo;
+				$invoicedateInst['Currency'] = $salesInvoicesArr['salesinvoicesdata'][0]->Currency;
+				$invoicedateInst['DueDate'] = $salesInvoicesArr['salesinvoicesdata'][0]->DueDate;
+				$invoicedateInst['TaxRegNumber'] = $salesInvoicesArr['salesinvoicesdata'][0]->TaxRegNumber;
+				$invoicedateInst['SalesInvoiceLineList'] = serialize($salesInvoicesArr['salesinvoicesdata'][0]->SalesInvoiceLineList);
+				$invoicedateInst['SalesInvoiceChargeList'] = serialize($salesInvoicesArr['salesinvoicesdata'][0]->SalesInvoiceChargeList);
+				
+				$invSavesql = "INSERT INTO " . $erpInvoicesTableName . " (erp_id, custaccount, dataorigin, deliveryaddress, deliverycity, delcountregid, deliverydate, increment_id, email, incltax, paymtermid, phonemobile, requesteddate, erpsalesid, erpsalesremarks, erpsalesresult, companyid, dlvmodeid, subtotal, vatamount, ordertotal, invoiceid, awbnumber, invoicedate, chargeamount, amountinwords, deliveryname, deliveryto, currency, duedate, taxregnumber, salesinvoicelinelist, salesinvoicechargelist) Values ('".$invoicedateInst['erp_id']."','".$invoicedateInst['CustAccount']."','".$invoicedateInst['DataOrigin']."','".$invoicedateInst['DeliveryAddress']."','".$invoicedateInst['DeliveryCity']."','".$invoicedateInst['DeliveryCountryRegionId']."','".$invoicedateInst['DeliveryDate']."','".$invoicedateInst['EComSalesId']."','".$invoicedateInst['Email']."','".$invoicedateInst['InclTax']."','".$invoicedateInst['PaymTermId']."','".$invoicedateInst['PhoneMobile']."','".$invoicedateInst['RequestedDate']."','".$invoicedateInst['SalesId']."','".$invoicedateInst['SalesRemarks']."','".$invoicedateInst['SalesResult']."','".$invoicedateInst['CompanyId']."','".$invoicedateInst['DlvModeId']."','".$invoicedateInst['SubTotal']."','".$invoicedateInst['VATAmount']."','".$invoicedateInst['OrderTotal']."','".$invoicedateInst['InvoiceId']."','".$invoicedateInst['AWBNumber']."','".$invoicedateInst['InvoiceDate']."','".$invoicedateInst['ChargeAmount']."','".$invoicedateInst['AmountInWords']."','".$invoicedateInst['DeliveryName']."','".$invoicedateInst['DeliveryTo']."','".$invoicedateInst['Currency']."','".$invoicedateInst['DueDate']."','".$invoicedateInst['TaxRegNumber']."','".$invoicedateInst['SalesInvoiceLineList']."','".$invoicedateInst['SalesInvoiceChargeList']."')";
+				$connection->query($invSavesql);
+				$lastInsertId = $connection->lastInsertId();
+				// return $lastInsertId;
+				
+			}
+			
+		}
+		
+		echo '<pre>';
+		echo 'Save Invoice Data Id: '.$lastInsertId;
+		print_r($salesInvoicesArr);
+		
+		die();		
+		
+	}	
+	/*Sales Invoice End*/
+	
+	/*Shipment Create Start*/
+	if(isset($Params['shipmentcreate']) && isset($Params['sc_orderno']) && ($Params['sc_orderno'] > 0)){
+		$shipmentId	= 0;
+		$increment_id = $Params['sc_orderno'];		
+		$loadorder = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($increment_id);		
+		$orderId = $loadorder->getId();
+		if(!empty($orderId)){
+			$shipmentId = $block->ShipmentCreate($orderId);
+		}
+		
+		echo $shipmentId;
+
+		die();		
+		
+	}	
+	/*Shipment Create End*/		
+	
+	/*Order Request Swftbox Start*/
+	if(isset($Params['orswftbox']) && isset($Params['orswftbox_orderno']) && ($Params['orswftbox_orderno'] > 0)){
+		$increment_id = $Params['orswftbox_orderno'];
+		$SwftboxOrderRequestResponse = [];
+		if(!empty($increment_id)){
+			$SwftboxOrderRequestResponse =  $block->SwftboxOrderRequest($increment_id);
+		}
+		
+		echo '<pre>';
+		print_r($SwftboxOrderRequestResponse);		
+		die();
+	}	
+	/*Order Request Swftbox End*/	
+
+	/*Swftbox Update Order Request Start*/
+	if(isset($Params['uorswftbox']) && isset($Params['uorswftbox_orderno']) && ($Params['uorswftbox_orderno'] > 0)){
+		$increment_id = $Params['uorswftbox_orderno'];
+		$SwftboxUpdateOrderRequestResponse = [];
+		if(!empty($increment_id)){
+			$SwftboxUpdateOrderRequestResponse =  $block->SwftboxUpdateOrderRequest($increment_id);
+		}
+		
+		echo '<pre>';
+		print_r($SwftboxUpdateOrderRequestResponse);		
+		die();
+	}	
+	/*Swftbox Update Order Request End*/	
+	
+	/*Swftbox Cancel Order Request Start*/
+	if(isset($Params['corswftbox']) && isset($Params['corswftbox_orderno']) && ($Params['corswftbox_orderno'] > 0)){
+		$increment_id = $Params['corswftbox_orderno'];
+		$SwftboxCancelOrderResponse = [];
+		if(!empty($increment_id)){
+			$SwftboxCancelOrderResponse =  $block->SwftboxCancelOrder($increment_id);
+		}
+		
+		echo '<pre>';
+		print_r($SwftboxCancelOrderResponse);		
+		die();
+	}	
+	/*Swftbox Cancel Order Request End*/	
+	
+}
+
+?>
+
+<?php echo __('Sales Order Sync'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="salesordersync-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="salesordersync" title="<?= $block->escapeHtmlAttr(__('Sales Order Sync')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Sales Order Sync')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Payment Journal'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="paymentjournal-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="pj_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="paymentjournal" title="<?= $block->escapeHtmlAttr(__('Payment Journal')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Payment Journal')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Sales order status'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="salesorderstatus-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="sos_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="salesorderstatus" title="<?= $block->escapeHtmlAttr(__('Sales Order Status')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Sales Order Status')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Sales invoices'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="salesinvoices-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="soi_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="salesinvoices" title="<?= $block->escapeHtmlAttr(__('Sales Invoice')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Sales Invoice')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Shipment Create'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="shipmentcreate-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="sc_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="shipmentcreate" title="<?= $block->escapeHtmlAttr(__('Create Shipment')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Create Shipment')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Swftbox Order Request'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="orswftbox-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="orswftbox_orderno" value="" placeholder="Shipment Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="orswftbox" title="<?= $block->escapeHtmlAttr(__('Swftbox Order Request')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Swftbox Order Request')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Swftbox Update Order Request'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="uorswftbox-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="uorswftbox_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="uorswftbox" title="<?= $block->escapeHtmlAttr(__('Swftbox Update Order')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Swftbox Update Order')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<?php echo __('Swftbox Cancel Order Request'); ?>
+<br/>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'admin/erpdata/api/salesodrdersync'; ?>"
+      id="corswftbox-form"
+      method="post"
+      enctype="multipart/form-data" >
+
+	<input type="text" name="corswftbox_orderno" value="" placeholder="Order Increment Id" required />
+	<br/>
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="corswftbox" title="<?= $block->escapeHtmlAttr(__('Swftbox Order Cancel')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Swftbox Order Cancel')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>

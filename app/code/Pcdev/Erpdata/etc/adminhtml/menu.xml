@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+	<menu>
+        <add id="Pcdev_Erpdata::erpdata" title="ERP API" module="Pcdev_Erpdata" sortOrder="51" resource="Pcdev_Erpdata::erpdata"/>
+        <add id="Pcdev_Erpdata::api" title="Manage API Data" module="Pcdev_Erpdata" sortOrder="10" action="erpdata/api/data" resource="Pcdev_Erpdata::api" parent="Pcdev_Erpdata::erpdata"/>
+		<add id="Pcdev_Erpdata::apisync" title="Update Product Data" module="Pcdev_Erpdata" sortOrder="20" action="erpdata/api/productupdate" resource="Pcdev_Erpdata::api" parent="Pcdev_Erpdata::erpdata"/>
+		<add id="Pcdev_Erpdata::indvprodupd" title="Update Individual Product" module="Pcdev_Erpdata" sortOrder="25" action="erpdata/api/indvproductupdate" resource="Pcdev_Erpdata::api" parent="Pcdev_Erpdata::erpdata"/>
+		<add id="Pcdev_Erpdata::ordersync" title="Sales Order" module="Pcdev_Erpdata" sortOrder="30" action="erpdata/api/salesodrdersync" resource="Pcdev_Erpdata::api" parent="Pcdev_Erpdata::erpdata"/>
+    </menu>
+</config>

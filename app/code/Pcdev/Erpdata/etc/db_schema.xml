@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sales_order">
+		<column xsi:type="int" name="is_sync" padding="2" nullable="false" default="0" comment="0=not sync, 1=sync" />		
+		<column xsi:type="varchar" name="erpsalesid" nullable="true" comment="erp sales id" />
+		<column xsi:type="text" name="erpsalesremarks" comment="api response remarks" />		
+    </table>
+	
+    <table name="erp_invoices" resource="default" engine="innodb" comment="ERP Invoices">
+        <column xsi:type="int" name="i_id" unsigned="true" nullable="false" identity="true" comment="ID"/>
+		<column xsi:type="int" name="erp_id" unsigned="true" nullable="false" identity="false" default="0" comment="ERP ID"/>
+		<column xsi:type="varchar" name="custaccount" nullable="true" length="100" comment="CustAccount"/>
+		<column xsi:type="varchar" name="dataorigin" nullable="true" length="100" comment="DataOrigin"/>
+		<column xsi:type="varchar" name="deliveryaddress" nullable="true" length="255" comment="DeliveryAddress"/>
+		<column xsi:type="varchar" name="deliverycity" nullable="true" length="255" comment="DeliveryCity"/>
+		<column xsi:type="varchar" name="delcountregid" nullable="true" length="255" comment="DeliveryCountryRegionId"/>
+		<column xsi:type="datetime" name="deliverydate" nullable="true" comment="DeliveryDate"/>
+		<column xsi:type="varchar" name="increment_id" nullable="true" length="50" comment="EComSalesId"/>
+		<column xsi:type="varchar" name="email" nullable="true" length="128" comment="Email"/>
+		<column xsi:type="varchar" name="incltax" nullable="true" length="100" comment="InclTax"/>
+		<column xsi:type="varchar" name="paymtermid" nullable="true" length="50" comment="PaymTermId"/>
+		<column xsi:type="varchar" name="phonemobile" nullable="true" length="255" comment="PhoneMobile"/>
+		<column xsi:type="datetime" name="requesteddate" nullable="true" comment="RequestedDate"/>
+		<column xsi:type="varchar" name="erpsalesid" nullable="true" length="100" comment="ERP SalesId"/>
+		<column xsi:type="text" name="erpsalesremarks" comment="api response remarks" />
+		<column xsi:type="varchar" name="erpsalesresult" length="100" comment="api response SalesResult" />
+		<column xsi:type="varchar" name="companyid" length="100" comment="CompanyId" />
+		<column xsi:type="varchar" name="dlvmodeid" length="100" comment="DlvModeId" />
+		<column xsi:type="varchar" name="subtotal" length="100" nullable="true" comment="SubTotal"/>
+		<column xsi:type="varchar" name="vatamount" length="100" nullable="true" comment="VATAmount"/>
+		<column xsi:type="varchar" name="ordertotal" length="100" nullable="true" comment="OrderTotal"/>
+		<column xsi:type="varchar" name="invoiceid" nullable="true" length="100" comment="ERP InvoiceId"/>
+		<column xsi:type="varchar" name="awbnumber" nullable="true" length="100" comment="AWBNumber"/>
+		<column xsi:type="datetime" name="invoicedate" nullable="true" comment="InvoiceDate"/>
+		<column xsi:type="varchar" name="chargeamount" length="100" nullable="true" comment="ChargeAmount"/>
+		<column xsi:type="varchar" name="amountinwords" nullable="true" length="255" comment="AmountInWords"/>
+		<column xsi:type="varchar" name="deliveryname" nullable="true" length="255" comment="DeliveryName"/>
+		<column xsi:type="varchar" name="deliveryto" nullable="true" length="255" comment="DeliveryTo"/>
+		<column xsi:type="varchar" name="currency" nullable="true" length="50" comment="Currency"/>
+		<column xsi:type="datetime" name="duedate" nullable="true" comment="DueDate"/>
+		<column xsi:type="varchar" name="taxregnumber" nullable="true" length="255" comment="TaxRegNumber"/>
+		<column xsi:type="text" name="salesinvoicelinelist" nullable="true" comment="SalesInvoiceLineList" />
+		<column xsi:type="text" name="salesinvoicechargelist" nullable="true" comment="SalesInvoiceChargeList" />
+		<column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="i_id"/>
+        </constraint>
+    </table>	
+    <table name="erp_product_data">
+		<column xsi:type="smallint" name="isinbundle" padding="2" nullable="true" default="0" comment="0=not, 1=yes" />
+		<column xsi:type="smallint" name="ispresent" padding="2" nullable="true" default="0" comment="0=not, 1=yes" />		
+    </table>	
+</schema>

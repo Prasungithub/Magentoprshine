@@ -1,0 +1,68 @@
+<div>
+	<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/productupdatepost'; ?>" id="updateproducts-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="requestsync" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="syncproducts" title="<?= $block->escapeHtmlAttr(__('Update Products')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Products')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<div>
+	<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/bundleproductupdatepost'; ?>" id="updatebundleproducts-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="requestbundlesync" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="syncbundleproducts" title="<?= $block->escapeHtmlAttr(__('Update Bundle Products')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Have It Your Way Products')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<div>
+	<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/newproductupdatepost'; ?>" id="updatenewproducts-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="requestnewsync" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="updatenewproducts" title="<?= $block->escapeHtmlAttr(__('Update New Products')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update New Products')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<div>
+	<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/newbundleproductupdatepost'; ?>" id="updatenewbundelproducts-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="requestnewbundlesync" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="updatenewbundleproducts" title="<?= $block->escapeHtmlAttr(__('Update New Have It Your Way Products')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update New Have It Your Way Products')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+
+<br/>
+<div>
+	<form class="form" action="<?php echo $block->getBaseUrl().'admin/erpdata/api/disableproductspost'; ?>" id="disableproducts-form" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="requestdisableproduct" value="1" />
+	<input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>">
+	
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="disableproducts" title="<?= $block->escapeHtmlAttr(__('Disable Products Which is not present In ERP')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Disable Products Which Is Not Present In ERP')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>

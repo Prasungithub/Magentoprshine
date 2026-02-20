@@ -1,0 +1,748 @@
+<?php
+
+namespace Pcdev\Erpdata\Controller\Adminhtml\Api;
+
+class Newbundleproductupdatepost extends \Magento\Backend\App\Action
+{
+	protected $_resultPageFactory;
+	protected $_resultJsonFactory;
+	protected $_erpviewblock;
+	protected $_categoryFactory;
+	protected $_eavConfig;
+	protected $_productRepository;
+	protected $_product;
+	protected $_productCollectionFactory;
+	protected $_resourceConnection;
+	protected $_publicActions = ['newbundleproductupdatepost'];
+
+	
+	public function __construct(
+        \Magento\Backend\App\Action\Context $context,
+		\Magento\Framework\View\Result\PageFactory $resultPageFactory,
+		\Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
+		\Pcdev\Erpdata\Block\Adminhtml\View $erpviewblock,
+		\Magento\Catalog\Model\CategoryFactory $categoryFactory,
+		\Magento\Eav\Model\Config $eavConfig,
+		\Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
+		\Magento\Catalog\Model\Product $productDt,
+		\Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
+		\Magento\Framework\App\ResourceConnection $resourceConnection
+	)
+	{
+		$this->_resultPageFactory = $resultPageFactory;
+		$this->_resultJsonFactory = $resultJsonFactory;
+		$this->_erpviewblock = $erpviewblock;
+		$this->_categoryFactory = $categoryFactory;
+		$this->_eavConfig = $eavConfig;
+		$this->_productRepository = $productRepository;
+		$this->_product = $productDt;
+		$this->_productCollectionFactory = $productCollectionFactory;
+		$this->_resourceConnection = $resourceConnection;
+		parent::__construct($context);
+	}
+
+    public function execute()
+    {		
+		$params = $this->getRequest()->getParams();
+		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+		$stockRegistry = $objectManager->get('Magento\CatalogInventory\Api\StockRegistryInterface');
+		$productFactory = $objectManager->get('\Magento\Catalog\Model\ProductFactory');
+		$storeId = 1;
+		
+		$AuthTocken = $this->_erpviewblock->getAuthenticationTocken();
+		if(isset($AuthTocken['access_token']) && $AuthTocken['access_token']){
+			$access_token = $AuthTocken['access_token'];
+		} else {
+			return false;
+		}
+		
+		$connection = $this->_resourceConnection->getConnection();
+		
+		/*New Product Item Data Update Start*/
+		if(isset($params['updatenewbundleproducts']) && $params['requestnewbundlesync'] == 1 && !empty($params['updatenewbundleproducts'])){
+			
+			$ItemId = 'NewUpdates'; // DFAP0027  All-Items CFCD0001 NewUpdates
+			$products = $this->_erpviewblock->getProducts($ItemId,$access_token);
+			
+			/*Collecting All Item Price*/
+			$itemPriceResult = $this->_erpviewblock->getItemPrice($access_token);		
+	
+			if(count($products) > 0){
+				foreach($products['items'] as $product){
+					
+					$data = [];			
+					$erpid = '$id';
+					$erp_pid = $product->$erpid;
+				
+					$data['topcategory'] = $product->CCategoryId;
+					$data['attributeset'] = $product->CCategoryId;
+					$data['name'] = $product->CProductDescription;
+					$data['erp_pid'] = $erp_pid;
+					$data['sku'] = $product->ItemId;
+					$data['price'] = 0;
+					$data['tax_percent'] = $product->TaxPercent;
+					$data['tax_class'] = 'Not Avaliable';
+					$data['stock_status'] = 'Not Avaliable';
+					$data['weight'] = 'Not Avaliable';
+					$data['quantity'] = 0;
+					$data['quantity_unit'] = 'Not Avaliable';					
+					$data['uom'] = $product->SalesUnit;
+					$data['categories'] = [];
+					$data['attributes'] = [];
+					$data['unit_convert'] = [];
+					$data['item_prices'] = [];
+					$data['packing'] = [];
+					
+					$category_data = [];
+					$category_data['topcategory'][$product->CCategoryId] = [];
+					$attribute_data = [];
+
+					if(isset($product->ItemAttributeList) && count($product->ItemAttributeList) > 0){
+						foreach($product->ItemAttributeList as $ItemAttributeListKey => $ItemAttributeListVal){
+							/*For catrgory*/
+							if(isset($ItemAttributeListVal->AttributeType) && $ItemAttributeListVal->AttributeType == 'Category'){
+								if(isset($ItemAttributeListVal->AttributeName) && strtoupper($ItemAttributeListVal->AttributeName) == strtoupper($data['topcategory'])){
+									$category_data['topcategory'][$ItemAttributeListVal->AttributeName][] = array('id'=>1,'childcategory'=>$this->_erpviewblock->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+								} else {
+									$category_data['othercategory'][$ItemAttributeListVal->AttributeName][] = array('id'=>1,'childcategory'=>$this->_erpviewblock->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+								}
+							}
+							/*For Attribute Like Type, Flavor*/
+							if(isset($ItemAttributeListVal->AttributeType) && $ItemAttributeListVal->AttributeType == 'Attribute'){
+								if(isset($ItemAttributeListVal->AttributeName) && !empty($ItemAttributeListVal->AttributeName)){
+									$attribute_data[$ItemAttributeListVal->AttributeName][] = array('id'=>1,'attribute'=>$this->_erpviewblock->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+								}
+							}					
+							
+						}
+
+						$data['categories'] = $category_data;
+						$data['attributes'] = $attribute_data;
+					}
+					
+					if(isset($product->ItemIdentifierList) && count($product->ItemIdentifierList) > 0){
+						foreach($product->ItemIdentifierList as $itemIdentifierKey => $itemIdentifierListVal){
+							if($itemIdentifierListVal->IdentifierName == 'LIFESTYLE'){
+								$data['allattributes'][$product->CCategoryId]['lifestyle'][] = array('id'=>1,'attribute'=>$itemIdentifierListVal->IdentifierValue);
+							}	
+
+							if($itemIdentifierListVal->IdentifierName == 'TYPE'){
+								$data['allattributes'][$product->CCategoryId]['type'][] = $itemIdentifierListVal->IdentifierValue;
+							}
+							
+							if($itemIdentifierListVal->IdentifierName == 'FLAVOR'){
+								$data['allattributes'][$product->CCategoryId]['flavor'][] = $itemIdentifierListVal->IdentifierValue;
+							}	
+
+							/*For Package Type*/
+							if($itemIdentifierListVal->IdentifierName == 'PACKAGING TYPE'){
+								$data['packing'][] = $itemIdentifierListVal->IdentifierValue;
+							}					
+							
+						}
+						
+						if(isset($data['allattributes'][$product->CCategoryId]['lifestyle']) && count($data['allattributes'][$product->CCategoryId]['lifestyle']) > 0){
+							$data['attributes']['lifestyle'] = $data['allattributes'][$product->CCategoryId]['lifestyle'];
+							
+						}
+					}
+					
+					if(isset($data['sku']) && !empty($data['sku'])){
+						$sku = $data['sku'];
+						$p_id = $this->_erpviewblock->saveItem($sku,$data);
+						echo 'Item records stored for sku '.$sku;
+						echo '<br/>';						
+					}
+					
+					/*Update UnitConvert Start*/
+					$UnitConvertResult = $this->_erpviewblock->getUnitConvert($access_token);
+					$UnitConvertData = [];
+					if($UnitConvertResult['status'] == 'success' && isset($UnitConvertResult['convertdata'])){
+						$UnitConvertData = $UnitConvertResult['convertdata'];
+						$uc_up_result = $this->_erpviewblock->updateUnitConvert($sku,$UnitConvertData);
+						echo 'UnitConvert updated for sku '.$sku;
+						echo '<br/>';						
+					}					
+					/*Update UnitConvert End*/
+					
+					/*Update Item On-hand Records Start*/
+					$ItemOnhand = $this->_erpviewblock->getItemOnhand($sku,$access_token);
+					if($ItemOnhand['status'] == 'success' && isset($ItemOnhand['stock'])){
+						if(isset($ItemOnhand['stock'][0]->AvailableQty) && isset($ItemOnhand['stock'][0]->InventUnitId)){
+							$stockOnhand['quantity'] = $ItemOnhand['stock'][0]->AvailableQty;
+							$stockOnhand['quantity_unit'] = $ItemOnhand['stock'][0]->InventUnitId;
+							$up_result = $this->_erpviewblock->updateStockOnHand($sku,$stockOnhand);
+							echo 'Item On-hand updated for sku '.$sku;
+							echo '<br/>';								
+						}
+					}
+					/*Update Item On-hand Records End*/
+					
+					/*Update Item Price Start*/
+					$itemPriceData = [];
+					if($itemPriceResult['status'] == 'success' && isset($itemPriceResult['itemprice']) && count($itemPriceResult['itemprice']) > 0){	foreach($itemPriceResult['itemprice'] as $itemPriceVal){
+							if(trim($itemPriceVal->ItemId) == $sku){
+								$pr_id = '$id';
+								$itemPriceData[$itemPriceVal->ItemId]['id'] = $itemPriceVal->$pr_id;
+								$itemPriceData[$itemPriceVal->ItemId]['AccountNum'] = $itemPriceVal->AccountNum;
+								$itemPriceData[$itemPriceVal->ItemId]['price'][] = array('AgreementValue'=>$itemPriceVal->AgreementValue, 'PriceUnitId'=>$itemPriceVal->PriceUnitId);
+							}					 
+						}
+							
+						if(count($itemPriceData[$sku]['price']) > 0){
+							$itemPriceData_sku = $itemPriceData[$sku];
+							$ip_up_result = $this->_erpviewblock->updateitemPrice($sku,$itemPriceData_sku);
+							echo 'Item Price updated for sku '.$sku;
+							echo '<br/>';							
+						}
+					}						
+					/*Update Item Price End*/
+					
+					/*Magento Product Data Update Start*/
+					$erpTableName = $connection->getTableName('erp_product_data');
+					$allItemsQuery = "SELECT `id`, `topcategory`, `name`, `erp_pid`, `sku`, `price`, `tax_percent`, `quantity`, `quantity_unit`, `uom`, `categories`, `attributes`, `packing`, `unit_convert`, `item_prices`, `ispresent` FROM " . $erpTableName . " WHERE `sku` = '".$sku."'";
+					$allItemsResults = $connection->fetchAll($allItemsQuery);
+					if(count($allItemsResults) > 0){						
+						foreach($allItemsResults as $allRecord){
+						if($allRecord['ispresent'] == '1'){
+							$updatedrecordcounter = 0;
+							$product = [];
+							$categoryArray = []; 
+							$categoryArray = array(2);
+							$product['attributeSetName'] = $allRecord['topcategory'];
+							$cat_name_for_haveiyw =  strtolower($allRecord['topcategory']);
+							
+							if($cat_name_for_haveiyw == 'nuts & seeds' || $cat_name_for_haveiyw == 'dried fruits & dates'){
+								
+								$product['attributeSetId'] = $this->getAttributeSetId('DEFAULT');
+								$subCatTitles = [];
+							
+								if(empty($product['attributeSetId'])){
+									$mismatchdata_sku = $allRecord['sku'];
+									echo 'AttributeSetId mismatch SKU '.$mismatchdata_sku;
+									echo '<br/>';
+									continue;
+								}
+							
+								$categories_array = unserialize($allRecord['categories']);
+								/*Top Category and it's Sub Categories*/
+								if(isset($categories_array['topcategory']) && count($categories_array['topcategory']) > 0){
+									foreach($categories_array['topcategory'] as $catKey => $catVal){
+										$categoryTitle = trim($catKey);
+										$subCatTitles[] = strtoupper($categoryTitle);
+										$cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle)->setPageSize(1);
+										if ($cat_collection->getSize()) {
+											$categoryId = $cat_collection->getFirstItem()->getId();
+											if($categoryId){
+												$categoryArray[] = $categoryId;
+											}
+										}
+										
+										if(count($catVal) > 0){
+											foreach($catVal as $catchildVal){
+												$categoryTitle = trim($catchildVal['childcategory']);
+												$subCatTitles[] = strtoupper($categoryTitle);
+												// $cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle)->setPageSize(1);
+												$cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle);
+												if ($cat_collection->getSize()) {
+													//$categoryId = $cat_collection->getFirstItem()->getId();
+													foreach($cat_collection as $subcatobj){
+														if($subcatobj->getId()){
+															$categoryArray[] = $subcatobj->getId();
+														}
+													}
+												}
+												
+											}
+										}
+									}								
+								}							
+							
+								/*Other Category and it's Sub Categories*/
+								if(isset($categories_array['othercategory']) && count($categories_array['othercategory']) > 0){
+									foreach($categories_array['othercategory'] as $catKey => $catVal){
+										$categoryTitle = trim($catKey);
+										$subCatTitles[] = strtoupper($categoryTitle);
+										$cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle)->setPageSize(1);
+										if ($cat_collection->getSize()) {
+											$categoryId = $cat_collection->getFirstItem()->getId();
+											if($categoryId){
+												$categoryArray[] = $categoryId;
+											}
+										}
+										
+										if(count($catVal) > 0){
+											foreach($catVal as $catchildVal){
+												$categoryTitle = trim($catchildVal['childcategory']);
+												$subCatTitles[] = strtoupper($categoryTitle);
+												// $cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle)->setPageSize(1);
+												$cat_collection = $this->_categoryFactory->create()->getCollection()->addAttributeToFilter('name',$categoryTitle);
+												if ($cat_collection->getSize()) {
+													//$categoryId = $cat_collection->getFirstItem()->getId();
+													foreach($cat_collection as $subcatobj){
+														if($subcatobj->getId()){
+															$categoryArray[] = $subcatobj->getId();
+														}
+													}
+												}
+												
+											}
+										}
+									}								
+								}								
+
+								$product['sku'] = trim($allRecord['sku']);
+								$product['product_name'] = $allRecord['name'];
+								$product['categories'] = array_unique($categoryArray);
+								$product['categorytitles'] = $subCatTitles;
+								$product['quantity'] = trim($allRecord['quantity']);
+								$quantity_unit = $allRecord['quantity_unit'];							
+								$product['stock_status'] = 1;
+								$uomLabel = trim($allRecord['uom']);
+								$product['taxclassid'] = 2;				
+							
+								if(isset($allRecord['attributes'])){
+									$attribute_array = unserialize(str_replace("'","\'",$allRecord['attributes']));
+									
+									$attributeSetId = $product['attributeSetId'];
+									
+									if($attributeSetId == 4){
+										// Default
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle'];		
+									} elseif($attributeSetId == 9){
+										// Bayara
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle'];	
+									} elseif($attributeSetId == 10){
+										// Nuts & Seeds
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'bayara_type','flavor'=>'nuts_flavor'];			
+									} elseif($attributeSetId == 11){
+										// Dried Fruits & Dates
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'type_driedfrt'];	
+									} elseif($attributeSetId == 12){
+										// Spices & Seasoning
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle','form'=>'form_spicessen','cuisine'=>'cuisine_spicessen'];	
+									} elseif($attributeSetId == 13){
+										// Pulses Grains
+										$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'type_pulsesgrn'];	
+									}
+									
+									$attribute_value_array = [];
+									if(count($attribute_array) > 0){									
+										foreach($attribute_array as $attribute_arrayKey => $attribute_arrayVal){
+											$attributeCodeText = strtolower($attribute_arrayKey);
+											$attribute_value_array[$attributeCodeText] = [];
+											
+											if(isset($attribute_code_Arr[$attributeCodeText])){
+												$attribute_code = $attribute_code_Arr[$attributeCodeText];
+												$attribute = $this->_eavConfig->getAttribute('catalog_product', $attribute_code);
+												
+												if(count($attribute_arrayVal) > 0){
+													foreach($attribute_arrayVal as $attribute_arrayValText){
+														$attributeOptionText = $attribute_arrayValText['attribute'];
+														$attributeOptionId =  $attribute->getSource()->getOptionId($attributeOptionText);
+														
+														if(!empty($attributeOptionId)){
+															$attribute_value_array[$attributeCodeText][] = $attributeOptionId;
+														}
+													}												
+												}											
+											}										
+										}
+									}								
+								}
+							
+								$product['allattributearray'] = $attribute_value_array;		
+
+								$price_array = [];
+								if(isset($allRecord['item_prices'])){
+									$price_array = unserialize($allRecord['item_prices']);
+									if(isset($price_array['price'])){
+										$price_array = $price_array['price'];									
+									}
+								}
+								$product['pricearray'] = $price_array;							
+									
+								$sku = $product['sku'];		
+							
+								if($sku){
+									$associatedProductIds = [];
+									$default_child_product = '';
+									
+									$lifestyle = '';
+									if(isset($product['allattributearray']['lifestyle']) && count($product['allattributearray']['lifestyle']) > 0){
+										$lifestyle = $product['allattributearray']['lifestyle'];											
+									}									
+									
+									$type = '';
+									if(isset($product['allattributearray']['type']) && count($product['allattributearray']['type']) > 0){
+										$type = $product['allattributearray']['type'];											
+									}	
+
+									$flavor = '';
+									if(isset($product['allattributearray']['flavor']) && count($product['allattributearray']['flavor']) > 0){
+										$flavor = $product['allattributearray']['flavor'];											
+									}	
+
+									$form = '';
+									if(isset($product['allattributearray']['form']) && count($product['allattributearray']['form']) > 0){
+										$form = $product['allattributearray']['form'];											
+									}
+									
+									$cuisine = '';
+									if(isset($product['allattributearray']['cuisine']) && count($product['allattributearray']['cuisine']) > 0){
+										$cuisine = $product['allattributearray']['cuisine'];											
+									}	
+
+									if(strtolower($quantity_unit) == 'kg'){
+										$totalErpInventory = $product['quantity'] * 1000;
+										$uom_Label = 'gm';
+										$conf_uom = $this->getUom($uom_Label);
+									} elseif(strtolower($quantity_unit) == 'pc'){
+										$uom_Label = 'pc';
+										$conf_uom = $this->getUom($uom_Label);
+										$totalErpInventory = $product['quantity'];
+									} else{
+										$uom_Label = 'pc';
+										$conf_uom = $this->getUom($uom_Label);									
+										$totalErpInventory = $product['quantity'];
+									}
+
+									if(count($product['pricearray']) > 0){
+										$minimal_price = min(array_column($product['pricearray'], 'AgreementValue'));
+										foreach($product['pricearray'] as $priceVal){
+											
+											// $erp_PriceUnitId = strtolower($priceVal['PriceUnitId']);
+											$erp_PriceUnitId = preg_replace('/[^a-z]/i', '', strtolower($priceVal['PriceUnitId']));
+											$weight_no_only = preg_replace('/[^0-9]/i', '', strtolower($priceVal['PriceUnitId']));
+											
+											if($erp_PriceUnitId == 'gm'){
+												$erp_PriceUnitId = 'g';
+											}
+											// for handeling PriceUnitId g and we set it as 1g
+											if($weight_no_only == ''){
+												$weight_no_only = 1;
+											}										
+											
+											$associatedProductSku = $sku.'-'.$weight_no_only.''.$erp_PriceUnitId;							
+											
+											$price = trim($priceVal['AgreementValue']);
+											if($price == $minimal_price){
+												$default_child_product = $associatedProductSku;
+											}
+											
+											$sizeAttributeOptionText = strtolower($priceVal['PriceUnitId']);
+											if($sizeAttributeOptionText == 'g'){
+												$sizeAttributeOptionText = '1gm';
+											}
+											$size_attribute_code = 'size';
+											$sizeattribute = $this->_eavConfig->getAttribute('catalog_product', $size_attribute_code);
+											$sizeAttributeOptionId = $sizeattribute->getSource()->getOptionId($sizeAttributeOptionText);				
+														
+											$product['size'] = $this->getUom($uomLabel);
+											$simple_product_name = $product['product_name'].'-'.strtolower($priceVal['PriceUnitId']);
+											$weight = preg_replace('/[^0-9]/i', '', strtolower($priceVal['PriceUnitId']));
+											$uom_Label = preg_replace('/[^a-z]/i', '', strtolower($priceVal['PriceUnitId']));	
+											if($uom_Label == 'g'){
+												$uom_Label = 'gm';
+											}
+											if($uom_Label == 'kg'){
+												if(is_numeric($weight)){
+													$weight = $weight * 1000;
+												}											
+												$uom_Label = 'gm';
+											}									
+											$simple_product_uom = $this->getUom($uom_Label);									
+											
+											if(($sizeAttributeOptionText == '50gm') || ($sizeAttributeOptionText == '50g')){
+											
+												if ($this->_product->getIdBySku($associatedProductSku)){
+													$simple_product = $productFactory->create();
+													$simple_product->setStoreId($storeId)->load($simple_product->getIdBySku($associatedProductSku));
+													$product['stock_status'] = 1; //Product Enable
+												} else {
+													$simple_product = $objectManager->create('Magento\Catalog\Model\Product');
+													$product['stock_status'] = 0; //Product Disable 
+												}
+
+												if($weight < 50 || $product['quantity'] < 1){
+													$product['stock_status'] = 0; //Product Disable 
+												}													
+				
+												try {
+													$simple_product->setTypeId('simple') // type of product you're importing
+															->setStatus($product['stock_status']) // 1 = enabled
+															->setAttributeSetId($product['attributeSetId'])
+															->setName($simple_product_name)
+															->setSku($associatedProductSku)
+															->setPrice($price)
+															->setTaxClassId($product['taxclassid']) // 0 = None, 2 = Taxable Goods
+															->setTotalErpInventory($totalErpInventory)
+															->setWeight($weight)
+															->setUom($simple_product_uom) // 18 = kg, 19 = gm, 20 = lt
+															->setSize($sizeAttributeOptionId)
+															->setCategoryIds($product['categories']) // array of category IDs, 2 = Default Category
+															->setLifestyle($lifestyle)
+															->setBayaraType($type)
+															->setTypeDriedfrt($type)
+															->setTypePulsesgrn($type)
+															->setNutsFlavor($flavor)	
+															->setFormSpicessen($form)
+															->setCuisineSpicessen($cuisine)							
+															->setWebsiteIds(array(1)) // Default Website ID
+															->setStoreId(0) // Default store ID
+															->setVisibility(1) // 4 = Catalog & Search, 1 = Not Visible Individually
+															->save();
+												
+														$productId = $simple_product->getId();
+														$associatedProductIds[] = $productId;
+														$updatedrecordcounter = $updatedrecordcounter + 1;
+															
+												} catch (\Magento\Framework\Exception\NoSuchEntityException $e){
+														$logger->info('Error in Quantity in sku: '. $associatedProductSku);
+														continue;
+												}										
+											
+												try
+												{
+													$stockItem = $stockRegistry->getStockItemBySku($associatedProductSku);
+										 
+													if ($stockItem->getQty() != $product['quantity'])
+													{
+														$quantity = $product['quantity'];
+														/*if(strtoupper($quantity_unit) == 'KG'){
+															$quantity = $quantity * 1000;													
+														}*/
+														$stockItem->setQty($quantity);
+														$stockItem->setIsQtyDecimal(1);
+														if ($product['quantity'] > 0)
+														{
+															$stockItem->setIsInStock(1);													
+														}
+														$stockRegistry->updateStockItemBySku($associatedProductSku, $stockItem);
+													}
+												} catch (\Magento\Framework\Exception\NoSuchEntityException $e){
+													$logger->info('Error in Quantity in sku: '. $associatedProductSku);
+													continue;
+												}
+											
+												unset($simple_product);
+											} else {
+												continue;
+											}
+					
+										}
+									}
+								
+									/*Checking product category and sub categories */
+									if((in_array('NUTS & SEEDS',$product['categorytitles'])) && ((in_array('ALMONDS',$product['categorytitles'])) || (in_array('CASHEWS',$product['categorytitles'])) || (in_array('GOURMET NUTS',$product['categorytitles'])) || (in_array('PEANUTS & CORN',$product['categorytitles'])) || (in_array('PISTACHIOS',$product['categorytitles'])) || (in_array('SWEET NUTS',$product['categorytitles'])) || in_array('WALNUTS',$product['categorytitles'])) ){
+										$box_category_text = 'Nuts';
+										$box_category_option_id = 78;
+									} elseif((in_array('NUTS & SEEDS',$product['categorytitles'])) && (in_array('SEEDS',$product['categorytitles'])) ){
+										$box_category_text = 'Seeds';
+										$box_category_option_id = 80;
+									} elseif((in_array('DRIED FRUITS & DATES',$product['categorytitles'])) && ( (in_array('APRICOTS',$product['categorytitles'])) || (in_array('BERRIES',$product['categorytitles'])) || (in_array('FIGS',$product['categorytitles'])) || (in_array('PRUNES',$product['categorytitles'])) || (in_array('RAISINS',$product['categorytitles'])) || (in_array('TROPICAL',$product['categorytitles']))) ){
+										$box_category_text = 'Dried fruits';
+										$box_category_option_id = 81;										
+									} elseif((in_array('DRIED FRUITS & DATES',$product['categorytitles'])) && ( (in_array('DATES',$product['categorytitles'])) || (in_array('DATES COATED & STUFFED',$product['categorytitles']))) ){
+										$box_category_text = 'Dates';
+										$box_category_option_id = 79;	
+										
+									} else {
+										$box_category_option_id = '';
+									}			
+									
+									/*Bundle Product Collection Start*/
+									$productCollection = $this->_productCollectionFactory->create();
+									$productCollection->addAttributeToFilter(array(array('attribute'=>'type_id','eq' => 'bundle')));
+									$productCollection->addFieldToFilter('box_category', ['eq' => $box_category_option_id]);
+									
+									if($productCollection->getSize() > 0){
+										foreach($productCollection as $bundleProduct){
+											$selectionSkuArray = [];
+											$bundle_product_id = $bundleProduct->getId();	
+											$bundle_product = $productFactory->create()->load($bundle_product_id);
+											
+											$selectionCollection = $bundle_product->getTypeInstance(true)
+																	->getSelectionsCollection(
+																		$bundle_product->getTypeInstance(true)->getOptionsIds($bundle_product),
+																		$bundle_product
+																	);
+
+											foreach ($selectionCollection as $proselection) {
+												$selectionSkuArray[] = $proselection->getProductId();
+											}
+											
+											if (isset($productId) && !in_array($productId, $selectionSkuArray)){
+
+												$BundleOptionsDataArr = [];	
+												$BundleSelectionsDataArr = [];
+												/*New Bundle Items Assign*/
+												$BundleOptionsDataArr[] = [
+															'title'=>'Item',
+															'default_title'=>'Item',
+															'type'=>'select',
+															'required'=>0,
+															'delete'=>''
+														];
+														
+												$BundleSelectionsDataArr[] = [
+																[
+																	'product_id'=>$productId,
+																	'selection_qty'=>1,
+																	'selection_can_change_qty'=>1,
+																	'delete'=>''
+																]
+															];
+												/*New Bundle Items Assign*/	
+												
+												/*Exist Bundle Items Reassign*/		
+												foreach($selectionSkuArray as $selectionSkuVal){
+													$BundleOptionsDataArr[] = [
+															'title'=>'Item',
+															'default_title'=>'Item',
+															'type'=>'select',
+															'required'=>0,
+															'delete'=>''
+														];
+														
+													$BundleSelectionsDataArr[] = [
+																[
+																	'product_id'=>$selectionSkuVal,
+																	'selection_qty'=>1,
+																	'selection_can_change_qty'=>1,
+																	'delete'=>''
+																]
+															];
+														
+												}
+												/*Exist Bundle Items Reassign*/		
+
+												$bundle_product->setBundleOptionsData(
+														$BundleOptionsDataArr
+													)->setBundleSelectionsData(
+														$BundleSelectionsDataArr
+													);		
+
+												/*$bundle_product->setBundleOptionsData(
+													[
+														[
+															'title'=>'Item',
+															'default_title'=>'Item',
+															'type'=>'select',
+															'required'=>0,
+															'delete'=>''
+														],
+														[
+															'title'=>'Item',
+															'default_title'=>'Item',
+															'type'=>'select',
+															'required'=>0,
+															'delete'=>''
+														]				
+														
+													]
+													)->setBundleSelectionsData(
+														[
+															[
+																[
+																	'product_id'=>1696,
+																	'selection_qty'=>1,
+																	'selection_can_change_qty'=>1,
+																	'delete'=>''
+																]
+															],
+															[
+																[
+																	'product_id'=>1697,
+																	'selection_qty'=>1,
+																	'selection_can_change_qty'=>1,
+																	'delete'=>''
+																]					
+															]
+														]
+													);*/
+
+												if($bundle_product->getBundleOptionsData()) {
+													$options = [];
+													foreach ($bundle_product->getBundleOptionsData() as $key => $option_data) {
+														if (!(bool)$option_data['delete']) {
+															$option = $objectManager->create('Magento\Bundle\Api\Data\OptionInterface');
+															$option->setData($option_data);
+															$option->setSku($bundle_product->getSku());
+															$option->setOptionId(null);
+															$links_array = [];
+															$bundle_links_data = $bundle_product->getBundleSelectionsData();
+															
+															if(!empty($bundle_links_data[$key])){
+																foreach ($bundle_links_data[$key] as $linkdata) {
+																	if(!(bool)$linkdata['delete']) {
+																		$link = $objectManager->create('Magento\Bundle\Api\Data\LinkInterface');
+																		$link->setData($linkdata);
+																		$linkProduct = $objectManager->get('\Magento\Catalog\Api\ProductRepositoryInterface')->getById($linkdata['product_id']);
+																		$link->setSku($linkProduct->getSku());
+																		$link->setQty($linkdata['selection_qty']);
+																		if (isset($linkdata['selection_can_change_qty'])) {
+																			$link->setCanChangeQuantity($linkdata['selection_can_change_qty']);
+																		}
+																		$links_array[] = $link;
+																	}
+																}
+																$option->setProductLinks($links_array);
+																$options[] = $option;
+															}
+														}
+													}
+													
+													$extension_attribute = $bundle_product->getExtensionAttributes();
+													$extension_attribute->setBundleProductOptions($options);
+													$bundle_product->setExtensionAttributes($extension_attribute);
+												}
+												$bundle_product->save();		
+												
+											}	
+
+											unset($bundle_product);
+										}
+									}									
+									/*Bundle Product Collection End*/
+								
+								}						
+							}
+						}
+						}
+
+					}
+					/*Magento Product Data Update End*/
+				}
+				
+			}
+		}			
+		/*New Product Item Data Update End*/
+		
+	?>
+		<a href="<?php echo $this->getUrl('erpdata/*/productupdate'); ?>"><?php echo __('Back to Main Page'); ?></a>
+	<?php	
+    }
+
+	public function getUom($uomLabel)
+	{
+		$UomArr = array('kg'=>18,'KG'=>18,'gm'=>19,'lt'=>20,'PC'=>77,'pc'=>77);
+		if(isset($UomArr[$uomLabel])){
+			return $UomArr[$uomLabel];
+		} else {
+			return '';
+		}
+	}
+	
+	public function getAttributeSetId($attributeSetName)
+	{
+		$attributeSetName = strtoupper($attributeSetName);
+		$AttributeSetArr = array('DEFAULT'=>4,'BAYARA'=>9,'NUTS & SEEDS'=>10,'DRIED FRUITS & DATES'=>11,'SPICES & SEASONING'=>12,'PULSES GRAINS'=>13, 'PULSES & GRAINS'=>13, 'TEAS & COFFEES'=>4);
+		if(isset($AttributeSetArr[$attributeSetName])){
+			return $AttributeSetArr[$attributeSetName];
+		} else {
+			return false;
+		}
+	}	
+	
+}

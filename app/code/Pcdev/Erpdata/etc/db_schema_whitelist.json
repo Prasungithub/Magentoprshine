@@ -1,0 +1,59 @@
+{
+    "sales_order": {
+        "column": {
+            "is_sync": true,
+            "erpsalesid": true,
+            "erpsalesremarks": true,
+            "erpinvoice": true
+        }
+    },
+    "erp_invoices": {
+        "column": {
+            "i_id": true,
+            "erp_id": true,
+            "custaccount": true,
+            "dataorigin": true,
+            "deliveryaddress": true,
+            "deliverycity": true,
+            "delcountregid": true,
+            "deliverydate": true,
+            "increment_id": true,
+            "email": true,
+            "incltax": true,
+            "paymtermid": true,
+            "phonemobile": true,
+            "requesteddate": true,
+            "erpsalesid": true,
+            "erpsalesremarks": true,
+            "erpsalesresult": true,
+            "companyid": true,
+            "dlvmodeid": true,
+            "subtotal": true,
+            "vatamount": true,
+            "ordertotal": true,
+            "invoiceid": true,
+            "awbnumber": true,
+            "invoicedate": true,
+            "chargeamount": true,
+            "amountinwords": true,
+            "deliveryname": true,
+            "deliveryto": true,
+            "Currency": true,
+            "duedate": true,
+            "taxregnumber": true,
+            "salesinvoicelinelist": true,
+            "salesinvoicechargelist": true,
+            "created_at": true,
+            "currency": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "erp_product_data": {
+        "column": {
+            "isinbundle": true,
+            "ispresent": true
+        }
+    }
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="citytech_erpdata_corn_salesordersync" instance="Pcdev\Erpdata\Cron\Salesordersync" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        <job name="citytech_erpdata_corn_invoicerequest" instance="Pcdev\Erpdata\Cron\Invoicerequest" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>	
+        <job name="citytech_erpdata_corn_swftboxordersync" instance="Pcdev\Erpdata\Cron\Swftboxordersync" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+		<job name="citytech_erpdata_corn_itempriceupdate" instance="Pcdev\Erpdata\Cron\Itempriceupdate" method="execute">
+            <schedule>59 0 * * *</schedule>
+        </job>
+        <job name="citytech_erpdata_corn_iteminventoryupdate" instance="Pcdev\Erpdata\Cron\Iteminventoryupdate" method="execute">
+            <schedule>59 1 * * *</schedule>
+        </job>		
+    </group>
+</config>

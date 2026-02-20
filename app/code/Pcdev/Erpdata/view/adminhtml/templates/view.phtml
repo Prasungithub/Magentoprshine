@@ -1,0 +1,310 @@
+<?php $AuthTocken = $block->getAuthenticationTocken();
+
+$Params = $this->getRequest()->getParams();
+
+if(isset($AuthTocken['access_token']) && $AuthTocken['access_token']){
+	$access_token = $AuthTocken['access_token'];
+	$ItemId = 'All-Items'; // DFAP0027  All-Items CFCD0001
+	$products = $block->getProducts($ItemId,$access_token);
+		
+	// echo '<pre>';
+	
+	if(count($products) > 0){
+		$ss = 1;
+		$erp_pid = 1;
+		echo '<h2>Total Items in API: '.count($products['items']).'</h2>';
+		
+		if(isset($Params['update_products'])){
+			/*Set All product Is present Value as 0*/
+			$itemsIsNotPresent = $block->updateItemsIsNotPresent();
+		}		
+
+		foreach($products['items'] as $product){
+			$data = [];			
+			$erpid = '$id';
+			$erp_pid = $product->$erpid;
+		
+			$data['topcategory'] = $product->CCategoryId;
+			$data['attributeset'] = $product->CCategoryId;
+			$data['name'] = $product->CProductDescription;
+			$data['erp_pid'] = $erp_pid;
+			$data['sku'] = $product->ItemId;
+			$data['price'] = 0;
+			$data['tax_percent'] = $product->TaxPercent;
+			$data['tax_class'] = 'Not Avaliable';
+			$data['stock_status'] = 'Not Avaliable';
+			$data['weight'] = 'Not Avaliable';
+			$data['quantity'] = 0;
+			$data['quantity_unit'] = 'Not Avaliable';					
+			$data['uom'] = $product->SalesUnit;
+			$data['categories'] = [];
+			$data['attributes'] = [];
+			$data['unit_convert'] = [];
+			$data['item_prices'] = [];
+			$data['packing'] = [];
+			
+			$category_data = [];
+			$category_data['topcategory'][$product->CCategoryId] = [];
+			$attribute_data = [];
+			
+			if(isset($product->ItemAttributeList) && count($product->ItemAttributeList) > 0){
+				foreach($product->ItemAttributeList as $ItemAttributeListKey => $ItemAttributeListVal){
+					/*For catrgory*/
+					if(isset($ItemAttributeListVal->AttributeType) && $ItemAttributeListVal->AttributeType == 'Category'){
+						if(isset($ItemAttributeListVal->AttributeName) && strtoupper($ItemAttributeListVal->AttributeName) == strtoupper($data['topcategory'])){
+							$category_data['topcategory'][$ItemAttributeListVal->AttributeName][] = array('id'=>1,'childcategory'=>$block->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+						} else {
+							$category_data['othercategory'][$ItemAttributeListVal->AttributeName][] = array('id'=>1,'childcategory'=>$block->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+						}
+					}
+					/*For Attribute Like Type, Flavor*/
+					if(isset($ItemAttributeListVal->AttributeType) && $ItemAttributeListVal->AttributeType == 'Attribute'){
+						if(isset($ItemAttributeListVal->AttributeName) && !empty($ItemAttributeListVal->AttributeName)){
+							$attribute_data[$ItemAttributeListVal->AttributeName][] = array('id'=>1,'attribute'=>$block->SpecialCharRemove($ItemAttributeListVal->AttributeValue));
+						}
+					}					
+					
+				}
+
+				$data['categories'] = $category_data;
+				$data['attributes'] = $attribute_data;
+			}
+			
+			if(isset($product->ItemIdentifierList) && count($product->ItemIdentifierList) > 0){
+				foreach($product->ItemIdentifierList as $itemIdentifierKey => $itemIdentifierListVal){
+					if($itemIdentifierListVal->IdentifierName == 'LIFESTYLE'){
+						$data['allattributes'][$product->CCategoryId]['lifestyle'][] = array('id'=>1,'attribute'=>$itemIdentifierListVal->IdentifierValue);
+					}	
+
+					if($itemIdentifierListVal->IdentifierName == 'TYPE'){
+						$data['allattributes'][$product->CCategoryId]['type'][] = $itemIdentifierListVal->IdentifierValue;
+					}
+					
+					if($itemIdentifierListVal->IdentifierName == 'FLAVOR'){
+						$data['allattributes'][$product->CCategoryId]['flavor'][] = $itemIdentifierListVal->IdentifierValue;
+					}	
+
+					/*For Package Type*/
+					if($itemIdentifierListVal->IdentifierName == 'PACKAGING TYPE'){
+						$data['packing'][] = $itemIdentifierListVal->IdentifierValue;
+					}					
+					
+				}
+				
+				if(isset($data['allattributes'][$product->CCategoryId]['lifestyle']) && count($data['allattributes'][$product->CCategoryId]['lifestyle']) > 0){
+					$data['attributes']['lifestyle'] = $data['allattributes'][$product->CCategoryId]['lifestyle'];
+					
+				}
+			}
+			
+			/*Save items in table  */
+			if(isset($Params['update_products'])){
+				if(isset($data['sku']) && !empty($data['sku'])){
+					$sku = $data['sku'];
+					$p_id = $block->saveItem($sku,$data);
+				}				
+			}
+			
+			$erp_pid = $erp_pid + 1;
+	
+		}
+				
+	}
+	
+	/*Update UnitConvert Start*/
+	if(isset($Params['update_unitconvert'])){
+		$uc_selectAllitems = $block->getAllItemsSku();
+		$uc_selectAllitems_count = count($uc_selectAllitems);
+		
+		if($uc_selectAllitems_count > 0){
+			$uc_rowsno = 50;
+			$uc_loopcount = round($uc_selectAllitems_count/$uc_rowsno);
+			$uc_limit_start = 0;
+			for($uc_c = 1; $uc_c <= $uc_loopcount;){
+				
+				$uc_selectLimitItems = $block->getLimitItemsSku($uc_limit_start,$uc_rowsno);
+				if(count($uc_selectLimitItems) > 0){
+					$UnitConvertResult = $block->getUnitConvert($access_token);					
+					foreach($uc_selectLimitItems as $uc_selectLimitItem){
+						$UnitConvertData = [];
+						$uc_p_sku = $uc_selectLimitItem['sku'];
+						// $UnitConvertResult = $block->getUnitConvert($uc_p_sku,$access_token);
+						if($UnitConvertResult['status'] == 'success' && isset($UnitConvertResult['convertdata'])){
+							$UnitConvertData = $UnitConvertResult['convertdata'];
+							$uc_up_result = $block->updateUnitConvert($uc_p_sku,$UnitConvertData);				
+						}
+					}
+				}
+				
+				$uc_limit_start = $uc_rowsno * $uc_c;
+				$uc_c = $uc_c + 1;
+			}
+		}
+	}
+	/*Update UnitConvert End*/	
+	
+	/*Update Item On-hand Records Start*/
+	if(isset($Params['update_itemonhand'])){
+		$selectAllitems = $block->getAllItemsSku();
+		
+		$selectAllitems_count = count($selectAllitems);
+		
+		if($selectAllitems_count > 0){				
+			$fatchrows = 50;
+			$loopcount = round($selectAllitems_count/$fatchrows);				
+			$limit_start = 0;
+			for($c = 1; $c <= $loopcount;){
+				
+				$selectLimitItems = $block->getLimitItemsSku($limit_start,$fatchrows);
+				if(count($selectLimitItems) > 0){
+					
+					foreach($selectLimitItems as $selectLimitItem){
+						$stockOnhand = [];
+						$p_sku = $selectLimitItem['sku'];
+						$ItemOnhand = $block->getItemOnhand($p_sku,$access_token);
+						if($ItemOnhand['status'] == 'success' && isset($ItemOnhand['stock'])){
+							if(isset($ItemOnhand['stock'][0]->AvailableQty) && isset($ItemOnhand['stock'][0]->InventUnitId)){
+								$stockOnhand['quantity'] = $ItemOnhand['stock'][0]->AvailableQty;
+								$stockOnhand['quantity_unit'] = $ItemOnhand['stock'][0]->InventUnitId;
+								$up_result = $block->updateStockOnHand($p_sku,$stockOnhand);	
+							}				
+						}
+					}
+				}
+				
+				$limit_start = $fatchrows * $c;
+				$c = $c + 1;
+			}
+		}
+	}
+	/*Update Item On-hand Records End*/
+	
+	
+	/*Update ItemPrices Start*/
+	if(isset($Params['update_price'])){
+		$ip_selectAllitems = $block->getAllItemsSku();
+		$ip_selectAllitems_count = count($ip_selectAllitems);
+		if($ip_selectAllitems_count > 0){
+			$ip_rowsno = 50;
+			$ip_loopcount = round($ip_selectAllitems_count/$ip_rowsno);
+			$ip_limit_start = 0;
+			$itemPriceResult = $block->getItemPrice($access_token);
+			for($ip_c = 1; $ip_c <= $ip_loopcount;){
+				
+				$ip_selectLimitItems = $block->getLimitItemsSku($ip_limit_start,$ip_rowsno);
+				if(count($ip_selectLimitItems) > 0){
+					
+					foreach($ip_selectLimitItems as $ip_selectLimitItem){
+						$itemPriceData = [];
+						$ip_p_sku = $ip_selectLimitItem['sku'];
+						if($itemPriceResult['status'] == 'success' && isset($itemPriceResult['itemprice'])){
+							if(count($itemPriceResult['itemprice']) > 0){
+								foreach($itemPriceResult['itemprice'] as $itemPriceVal){
+									$pr_id = '$id';
+									$itemPriceData[$itemPriceVal->ItemId]['id'] = $itemPriceVal->$pr_id;
+									$itemPriceData[$itemPriceVal->ItemId]['AccountNum'] = $itemPriceVal->AccountNum;
+									$itemPriceData[$itemPriceVal->ItemId]['price'][] = array('AgreementValue'=>$itemPriceVal->AgreementValue, 'PriceUnitId'=>$itemPriceVal->PriceUnitId); 
+								}
+							}
+						}						
+						/*$itemPriceData =  array(
+											"id"=>1,
+											"AccountNum"=>"KPG001",
+											"price"=>array(
+														"0"=>array("AgreementValue"=>12.00, "PriceUnitId"=>"KG"),
+														"1"=>array("AgreementValue"=>7.00, "PriceUnitId"=>"500gm"),
+														"2"=>array("AgreementValue"=>4.00, "PriceUnitId"=>"250gm")
+														)
+											);*/
+						if(isset($itemPriceData[$ip_p_sku])){
+							$itemPriceData_sku = $itemPriceData[$ip_p_sku];
+						} else {
+							$itemPriceData_sku = [];
+						}						
+											
+						$ip_up_result = $block->updateitemPrice($ip_p_sku,$itemPriceData_sku);
+						
+					}				
+				
+				}
+				
+				$ip_limit_start = $ip_rowsno * $ip_c;
+				$ip_c = $ip_c + 1;
+			}
+		}
+	}
+	/*Update ItemPrices End*/	
+	
+}
+
+$Allitems_forupdate_btn = $block->getAllItemsSku();
+echo '<h2>Total Items in Table: '.count($Allitems_forupdate_btn).'</h2>';
+echo __('If you run "Item Request" API then please run all the API one by one.');
+echo '<br>';
+?>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'erpdata/api/data'; ?>"
+      id="updateitems-form"
+      method="post"
+      enctype="multipart/form-data" >
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="update_products" title="<?= $block->escapeHtmlAttr(__('Update Table Records from ERP Collection')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Item Request')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+<br/>
+
+<?php		
+if(count($Allitems_forupdate_btn) > 0){
+?>
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'erpdata/api/data'; ?>"
+      id="unitconvert-form"
+      method="post"
+      enctype="multipart/form-data" >
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="update_unitconvert" title="<?= $block->escapeHtmlAttr(__('Update Unit Convert')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Unit Convert')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+<br/>
+
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'erpdata/api/data'; ?>"
+      id="itemonhand-form"
+      method="post"
+      enctype="multipart/form-data" >
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="update_itemonhand" title="<?= $block->escapeHtmlAttr(__('Update Item On-hand')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Item On-hand')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+<br/>
+
+<div>
+	<form class="form"
+      action="<?php echo $block->getBaseUrl().'erpdata/api/data'; ?>"
+      id="updateprice-form"
+      method="post"
+      enctype="multipart/form-data" >
+	<div class="actions-toolbar">
+		<div class="primary">
+			<button type="submit" name="update_price" title="<?= $block->escapeHtmlAttr(__('Update Price')) ?>" class="action submit primary" value="1"><span><?= $block->escapeHtml(__('Update Price')) ?></span></button>
+		</div>
+	</div>
+	</form>
+</div>
+	
+<?php
+}
+?>
+
