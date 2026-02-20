@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+	<system>
+        <section id="ctmainmenuconfig" translate="label" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Category Menu</label>
+            <tab>citytechconfig</tab>
+            <resource>Pcdev_Categorymenu::categorymenu_config</resource>
+            <group id="catlistmainmenu" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Category List for Main Menu</label>
+                <field id="mmcategoryids" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Category Ids</label>
+					<comment>Use comma separator. e.g. 1,2,3,4,5</comment>
+                </field>
+            </group>
+            <group id="catlistfootermenu" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Category List for Footer Menu</label>
+                <field id="footermcategoryids" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Category Ids</label>
+					<comment>Use comma separator. e.g. 1,2,3,4,5</comment>
+                </field>
+            </group>			
+        </section>		
+    </system>
+</config>

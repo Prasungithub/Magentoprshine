@@ -1,0 +1,1007 @@
+<?php $top_selling_title = $block->getTitle(); ?>
+<?php $collection = $block->getProductCollection(); ?>
+<?php $topSellingProductIds = $block->getProductIds(); ?>
+<?php $featured_products_title = $block->getFeaturedProductsTitle(); ?>
+<?php $featured_products_collection = $block->getFeaturedProductsCollection(); ?>
+<?php $abstractProductBlock = $block->getLayout()->createBlock('\Magento\Catalog\Block\Product\AbstractProduct'); ?>
+<?php $productattributeblock = $block->getLayout()->createBlock('Pcdev\Categoryattributes\Block\Productattribute'); ?>
+<?php $topSellingAllProducts = $block->getTopSellingAllProducts(); ?>
+<?php $featured_cat_collection = $block->getFeaturedCatCollection(); ?>
+
+
+<?php 
+	$imageHelper = $this->helper(\Magento\Catalog\Helper\Image::class);
+	$placeholderImageUrl = $imageHelper->getDefaultPlaceholderUrl('image');
+?>
+<!--qty Box start -->
+<?php $qtyupdateBlock =  $this->getLayout()->createBlock("Pcdev\Customization\Block\Cart\Qtyupdate"); ?>
+<!--qty Box end -->
+<!--Featured Products Start-->
+
+<?php $this->setCacheKey(uniqid()); ?>
+<div class="featured_products_home">
+	<?php
+	if(!empty($featured_products_title)){
+	?>
+		<h2 class="featured_products_title"><?php echo $featured_products_title; ?></h2>
+	<?php
+	}
+	
+	if(count($featured_products_collection) > 0)
+	{	
+	?>
+		<div class="featured_product_list product data items"
+			 data-mage-init='{"mage/tabs": {"openedState": "active", "animate": {"duration": 100}, "active": 0, "disabledState": "disabled"}}'>
+			<?php 
+				foreach($featured_products_collection as $fet_key=>$feat_cat_prods){
+			?>
+				<div class="item title" data-role="collapsible">
+					<a class="switch switch<?php echo $fet_key; ?>" data-toggle="trigger" data-id="<?php echo $fet_key; ?>" id="<?php echo $fet_key; ?>" href="#tab-<?php echo $fet_key; ?>">
+					<img src="<?php echo $this->getBaseUrl().''.$feat_cat_prods['category']['category_menu_icon']; ?>" />
+					<?php if($feat_cat_prods['category']['category_menu_hover_icon']) {
+						?>
+						<img class="hover_icon" src="<?php echo $this->getBaseUrl().''.$feat_cat_prods['category']['category_menu_hover_icon']; ?>" />
+						<?php
+					}
+					?>
+					<?php echo $feat_cat_prods['category']['name']; ?></a>
+				</div>
+				
+							
+				<div id="tab-<?php echo $fet_key; ?>" class="item content" data-role="content">
+					<ul class="featured_product_items featured_product_slider<?php echo $fet_key; ?> product_slider">
+				<?php
+					foreach($feat_cat_prods['products'] as $fet_prod_key=>$feat_cat_prod){
+						
+					$feat_cat_prod_data = $block->getTopSellingProduct($feat_cat_prod['data']['entity_id']);
+					//$feat_cat_prod_data = $feat_cat_prod['data'];
+			
+					if($feat_cat_prod_data){
+						if ($feat_cat_prod_data->getStatus() == 1) {
+					?>									
+					<li class="product-item">
+						<div class="top_selling_product">								
+							<div class="top_selling_prod_img">
+							<a href="<?php echo $feat_cat_prod_data->getProductUrl(); ?>">
+								<?php if($feat_cat_prod_data->getImage()){
+									
+									$imageUrl = $this->helper('Magento\Catalog\Helper\Image')->init($feat_cat_prod_data, 'product_base_image')
+											->constrainOnly(true)
+											->keepAspectRatio(true)
+											->keepTransparency(true)
+											->keepFrame(false)
+											->resize(300,300)->getUrl();
+								?>
+										<img src="<?php echo $imageUrl; ?>" alt="<?php echo $feat_cat_prod_data->getData('name'); ?>" height="155" width="155" loading="lazy" />
+								<?php }else{ ?>
+									<img src="<?php echo $placeholderImageUrl; ?>" alt="" title="" height="155" width="155" loading="lazy"  />
+								<?php } ?>
+							</a>	
+							</div>
+							<div class="top_selling_prod_info">
+							<a href="<?php echo $feat_cat_prod_data->getProductUrl(); ?>">
+								<p><?php echo $feat_cat_prod_data->getData('name'); ?></p>
+							</a>
+
+							<div class="prod_default_size">	
+								<?php
+									$DefaultSize = $productattributeblock->getProductDefaultSize($feat_cat_prod_data->getId());
+									echo $DefaultSize;							 
+								?>
+							</div>							
+
+							<div class="prod_price_area">
+								<div class="prod_price_amt">						
+									<span class="top_price">
+									<?php
+										echo $abstractProductBlock->getProductPrice($feat_cat_prod_data);
+									?>
+									</span>
+								</div>
+								<div class="prod_price_vat">
+								<?php echo __('(Inc. VAT)'); ?>
+								</div>
+							</div>						
+							
+							<div class="product-item-inner">
+								<div class="product actions product-item-actions">
+									<div class="actions-primary">						
+										<?php if ($feat_cat_prod_data->isSaleable()){ ?>
+											<?php $cartqty = 0; if ($feat_cat_prod_data->isAvailable()){ $cartqty = 1; } ?>
+											<?php
+											$cart_qty = 0;
+										    $item_id = 0;
+											?>
+											<?php $_product = $feat_cat_prod_data ; ?>
+										<?php $product_id = $_product->getId();?>
+			
+										<?php
+										    $IdDoProduto = $_product->getId();
+											$sku = $_product->getSku();
+
+
+											$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+											$cart = $objectManager->get('\Magento\Checkout\Model\Session');
+											// retrieve quote items collection
+											$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+											// get array of all items what can be display directly
+											$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+											// retrieve quote items array
+											 $items = $cart->getQuote()->getAllItems();
+											//print_r($items);
+											foreach($items as $item) {
+												//echo "--".$item->getProduct_id();
+												 if($IdDoProduto == $item->getProduct_id()){
+													 //echo "uu-".$item->getProduct_id();
+														$cart_qty = $item->getQty();
+														$item_id = $item->getId();
+												 }         
+											  }
+											  
+											 // echo "tt".$cart_qty."-".$item_id;
+											 ?>
+											
+											<form data-role="tocart-form"
+                                              data-product-sku="<?= $escaper->escapeHtml($_product->getSku()) ?>"
+                                              action="<?php echo $block->escapeUrl($block->getUrl('checkout/cart/add').'/uenc/product/'.$_product->getEntityId()); ?>"
+                                              method="post">
+                                            
+                                            <input type="hidden" name="product" value="<?php echo $_product->getEntityId(); ?>" />
+											<input type="hidden" name="uenc" value="" />
+											<input name="form_key" type="hidden" value="<?php echo rand(100000000000,999999999999); ?>" />
+
+                                            <div class="qty-box" style="display:none">
+                                                <a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+												<input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="<?= $cartqty * 1 ?>" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+                                                <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+                                            </div>
+                                            <!--qty Box start -->              
+                                            <div class="associated-product-qty-box-wrapper">
+                                                <?php $_product         = $_product; // section product ?> 
+                                                <?php $product_id       = $_product->getId();?>
+                                                <?php $itemQtyInCart    = $qtyupdateBlock->getItemQty($product_id); ?>
+                                                <?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+                                                <?php $type    = "featured"; ?>
+                                                <?php //if($productType == "simple"){ ?>
+                                                    <div  section="<?php echo $type; ?>"  id="qty_box_counter_<?php echo $product_id.$type; ?>" class="qty-box-counter <?= $itemQtyInCart > 0 ? "has-product" : "" ?>">
+                                                        <?= $itemQtyInCart > 0  ? $itemQtyInCart : "+" ?>
+                                                    </div>
+                                                <?php /* }else{ ?>
+                                                    <div class="qty-box-counter-not-simple"  section="<?php echo $type; ?>" >
+                                                        <a href="<?= $_product->getProductUrl(); ?>">
+                                                            <?= "+" ?>
+                                                        </a>
+                                                    </div>
+                                                <?php } */ ?> 
+                                                <div class="associated-product-qty" style="display:none;"> 
+                                                    <?php 
+                                                        $deleteCLsQty ="";
+                                                        if($itemQtyInCart ==1){
+                                                            $deleteCLsQty = "delete-qty-minus";
+                                                        }
+                                                    ?>
+                                                    <span 
+                                                        id="associated_product_qty_minus_id_<?php echo $product_id.$type; ?>"
+                                                        class="associated-product-qty-minus <?= $deleteCLsQty; ?>" 
+                                                        product_id="<?php echo $product_id; ?>" 
+                                                        section="<?php echo $type; ?>" 
+                                                        
+                                                    >-</span> 
+                                                    <span>
+                                                        <input name="quantity[<?php echo $product_id; ?>]" 
+                                                               id="<?= "quantity_".$product_id.$type; ?>"
+                                                               type="number" 
+                                                               class="associated-product-qty-input" 
+                                                               value="<?= $itemQtyInCart; ?>"               
+                                                               product_id="<?php echo $product_id; ?>"
+                                                               section="<?php echo $type; ?>"
+                                                        >
+                                                    </span>
+                                                    <span class="associated-product-qty-plus" 
+                                                          product_id="<?php echo $product_id; ?>" 
+                                                          section="<?php echo $type; ?>"
+                                                    >+ </span>
+                                                </div>
+                                            </div> 
+                                            <!--qty Box End -->
+                                        </form>
+										
+										
+									
+											
+										<?php } ?>	
+									</div>
+									
+									<div data-role="add-to-links" class="actions-secondary">
+										<?php echo $block->getLayout()->createBlock('Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist')->setProduct($feat_cat_prod_data)->setTemplate("Magento_Wishlist::catalog/product/list/addto/wishlist.phtml")->toHtml(); ?>
+									</div>
+									
+								</div>
+							</div>
+							
+							<script type="text/x-magento-init">
+							{
+								"[data-role=tocart-form], .form.map.checkout": {
+									"catalogAddToCart": {
+										"product_sku": "<?= $escaper->escapeJs($feat_cat_prod_data->getSku()) ?>"
+									}
+								}
+							}
+							</script>								
+								
+							</div>
+						</div>
+					</li>
+				<?php					
+						}
+					}
+					}
+				?>
+					</ul>				
+				</div>					
+			<?php	
+				}
+			?>
+		</div>
+
+	<?php
+	}
+	?>	
+</div>
+<!--Featured Products End-->
+
+<!--Ajax Featured Products Start-->
+<?php 
+if(count($featured_cat_collection) > 0){
+	?>
+	<div class="ajax_featured_prdos_area">
+		 <?php
+		 $default_cat_id = $featured_cat_collection[0]['cat_id'];
+		 $cat_counter = 1;
+		 foreach($featured_cat_collection as $featured_cat_key=>$featured_cat_val){
+			?>
+			<div class="featured_cat_item <?php if($cat_counter == 1) { echo 'active'; } ?>" fpc="<?php echo $featured_cat_val['cat_id']; ?>">
+				<a class="featured_cat_tab <?php echo 'tab'.$featured_cat_val['cat_id']; ?>"><img src="<?php echo $this->getBaseUrl().''.$featured_cat_val['category_menu_icon']; ?>"/>
+					<?php if($featured_cat_val['category_menu_hover_icon']) {
+						?>
+						<img class="hover_icon" src="<?php echo $this->getBaseUrl().''.$featured_cat_val['category_menu_hover_icon']; ?>" />
+						<?php
+					}
+					?>
+					<span><?php echo $featured_cat_val['name']; ?></span></a>
+			</div>	
+			<?php
+			$cat_counter = $cat_counter + 1;
+		 }
+		 ?>
+			<div class="featured_cat_content_area">
+				<div id="featured_cat_content" class="featured_cat_tab_content">
+					<?php $featured_products_data = $block->getFeaturedProdsByCatId($default_cat_id);
+						if(count($featured_products_data) > 0){
+					?>
+				<ul class="featured_product_slider_new product_slider">	
+					<?php
+							foreach($featured_products_data as $feat_cat_prod_data){
+								
+								if($feat_cat_prod_data){
+									if ($feat_cat_prod_data->getStatus() == 1) {
+								?>									
+								<li class="product-item">
+									<div class="top_selling_product">								
+										<div class="top_selling_prod_img_ch">
+										<a href="<?php echo $feat_cat_prod_data->getProductUrl(); ?>">
+											<?php if($feat_cat_prod_data->getImage()){
+												
+												$imageUrl = $this->helper('Magento\Catalog\Helper\Image')->init($feat_cat_prod_data, 'product_base_image')
+														->constrainOnly(true)
+														->keepAspectRatio(true)
+														->keepTransparency(true)
+														->keepFrame(true)
+														->resize(300,300)->getUrl();
+											?>
+													<img src="<?php echo $imageUrl; ?>" alt="<?php echo $feat_cat_prod_data->getData('name'); ?>" height="207" width="207" loading="lazy" />
+											<?php }else{ ?>
+												<img src="<?php echo $placeholderImageUrl; ?>" alt="" title="" height="207" width="207" loading="lazy"  />
+											<?php } ?>
+										</a>	
+										</div>
+										<div class="top_selling_prod_info">
+										<a href="<?php echo $feat_cat_prod_data->getProductUrl(); ?>">
+											<p><?php echo $feat_cat_prod_data->getData('name'); ?></p>
+										</a>
+
+										<div class="prod_default_size">	
+											<?php
+												$DefaultSize = $productattributeblock->getProductDefaultSize($feat_cat_prod_data->getId());
+												echo $DefaultSize;							 
+											?>
+										</div>							
+
+										<div class="prod_price_area">
+											<div class="prod_price_amt">						
+												<span class="top_price">
+												<?php
+													echo $abstractProductBlock->getProductPrice($feat_cat_prod_data);
+												?>
+												</span>
+											</div>
+											<div class="prod_price_vat">
+											<?php echo __('(Inc. VAT)'); ?>
+											</div>
+										</div>						
+										
+										<div class="product-item-inner">
+											<div class="product actions product-item-actions">
+												<div class="actions-primary">						
+													<?php if ($feat_cat_prod_data->isSaleable()){ ?>
+														<?php $cartqty = 0; if ($feat_cat_prod_data->isAvailable()){ $cartqty = 1; } ?>
+														<?php
+														$cart_qty = 0;
+														$item_id = 0;
+														?>
+														<?php $_product = $feat_cat_prod_data ; ?>
+													<?php $product_id = $_product->getId();?>
+						
+													<?php
+														$IdDoProduto = $_product->getId();
+														$sku = $_product->getSku();
+
+
+														$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+														$cart = $objectManager->get('\Magento\Checkout\Model\Session');
+														// retrieve quote items collection
+														$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+														// get array of all items what can be display directly
+														$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+														// retrieve quote items array
+														 $items = $cart->getQuote()->getAllItems();
+														//print_r($items);
+														foreach($items as $item) {
+															//echo "--".$item->getProduct_id();
+															 if($IdDoProduto == $item->getProduct_id()){
+																 //echo "uu-".$item->getProduct_id();
+																	$cart_qty = $item->getQty();
+																	$item_id = $item->getId();
+															 }         
+														  }
+														  
+														 // echo "tt".$cart_qty."-".$item_id;
+														 ?>
+														
+														<form data-role="tocart-form"
+														  data-product-sku="<?= $escaper->escapeHtml($_product->getSku()) ?>"
+														  action="<?php echo $block->escapeUrl($block->getUrl('checkout/cart/add').'/uenc/product/'.$_product->getEntityId()); ?>"
+														  method="post">
+														
+														<input type="hidden" name="product" value="<?php echo $_product->getEntityId(); ?>" />
+														<input type="hidden" name="uenc" value="" />
+														<input name="form_key" type="hidden" value="<?php echo rand(100000000000,999999999999); ?>" />
+
+														<div class="qty-box" style="display:none">
+															<a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+															<input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="<?= $cartqty * 1 ?>" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+															<a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+														</div>
+														<!--qty Box start -->              
+														<div class="associated-product-qty-box-wrapper">
+															<?php $_product         = $_product; // section product ?> 
+															<?php $product_id       = $_product->getId();?>
+															<?php $itemQtyInCart    = $qtyupdateBlock->getItemQty($product_id); ?>
+															<?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+															<?php $type    = "featured"; ?>
+															<?php //if($productType == "simple"){ ?>
+																<div  section="<?php echo $type; ?>"  id="qty_box_counter_<?php echo $product_id.$type; ?>" class="qty-box-counter <?= $itemQtyInCart > 0 ? "has-product" : "" ?>">
+																	<?= $itemQtyInCart > 0  ? $itemQtyInCart : "+" ?>
+																</div>
+															<?php /* }else{ ?>
+																<div class="qty-box-counter-not-simple"  section="<?php echo $type; ?>" >
+																	<a href="<?= $_product->getProductUrl(); ?>">
+																		<?= "+" ?>
+																	</a>
+																</div>
+															<?php } */ ?> 
+															<div class="associated-product-qty" style="display:none;"> 
+																<?php 
+																	$deleteCLsQty ="";
+																	if($itemQtyInCart ==1){
+																		$deleteCLsQty = "delete-qty-minus";
+																	}
+																?>
+																<span 
+																	id="associated_product_qty_minus_id_<?php echo $product_id.$type; ?>"
+																	class="associated-product-qty-minus <?= $deleteCLsQty; ?>" 
+																	product_id="<?php echo $product_id; ?>" 
+																	section="<?php echo $type; ?>" 
+																	
+																>-</span> 
+																<span>
+																	<input name="quantity[<?php echo $product_id; ?>]" 
+																		   id="<?= "quantity_".$product_id.$type; ?>"
+																		   type="number" 
+																		   class="associated-product-qty-input" 
+																		   value="<?= $itemQtyInCart; ?>"               
+																		   product_id="<?php echo $product_id; ?>"
+																		   section="<?php echo $type; ?>"
+																	>
+																</span>
+																<span class="associated-product-qty-plus" 
+																	  product_id="<?php echo $product_id; ?>" 
+																	  section="<?php echo $type; ?>"
+																>+ </span>
+															</div>
+														</div> 
+														<!--qty Box End -->
+													</form>
+													
+													
+												
+														
+													<?php } ?>	
+												</div>
+												
+												<div data-role="add-to-links" class="actions-secondary">
+													<?php echo $block->getLayout()->createBlock('Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist')->setProduct($feat_cat_prod_data)->setTemplate("Magento_Wishlist::catalog/product/list/addto/wishlist.phtml")->toHtml(); ?>
+												</div>
+												
+											</div>
+										</div>
+										
+										<script type="text/x-magento-init">
+										{
+											"[data-role=tocart-form], .form.map.checkout": {
+												"catalogAddToCart": {
+													"product_sku": "<?= $escaper->escapeJs($feat_cat_prod_data->getSku()) ?>"
+												}
+											}
+										}
+										</script>								
+											
+										</div>
+									</div>
+								</li>
+							<?php					
+									}
+								}								
+								
+							}
+							?>
+						</ul>
+							<?php
+						}
+					?>
+				</div>
+			</div>		 
+	</div>
+	<?php	
+}
+?>
+
+<!--Ajax Featured Products End-->
+
+<!--Top Selling Products Start-->
+<div class="top_selling_home">
+	<?php
+	if(!empty($top_selling_title)){
+	?>
+		<h2 class="top_selling_title"><?php echo $top_selling_title; ?></h2>
+	<?php
+	}
+	
+	 if($topSellingAllProducts && count($topSellingAllProducts) > 0){		 
+		echo '<ul class="top_selling_list products_slider">';
+		foreach($topSellingAllProducts as $topsellingprod){	
+			$cart_qty = 0;
+			$item_id = 0;
+			
+			if($topsellingprod){
+				if ($topsellingprod->getStatus() == 1) {
+			?>			
+				<li class="product-item">
+					<div class="top_selling_product">	
+						<div class="top_selling_prod_img">
+						<a href="<?php echo $topsellingprod->getProductUrl(); ?>">
+							<?php if($topsellingprod->getImage()){
+								
+								$imageUrl = $this->helper('Magento\Catalog\Helper\Image')->init($topsellingprod, 'product_base_image')
+										->constrainOnly(true)
+										->keepAspectRatio(true)
+										->keepTransparency(true)
+										->keepFrame(false)
+										->resize(300,300)->getUrl();
+							?>
+									<img src="<?php echo $imageUrl; ?>" alt="<?php echo $topsellingprod->getData('name'); ?>" height="155" width="155" loading="lazy" />
+							<?php }else{ ?>
+							<img src="<?php echo $placeholderImageUrl; ?>" alt="" title="" height="155" width="155" loading="lazy" />
+							<?php } ?>
+						</a>	
+						</div>
+						<div class="top_selling_prod_info">
+						<a href="<?php echo $topsellingprod->getProductUrl(); ?>">
+							<p><?php echo $topsellingprod->getData('name'); ?></p>
+						</a>
+
+						<div class="prod_default_size">	
+							<?php
+								$DefaultSize = $productattributeblock->getProductDefaultSize($topsellingprod->getId());
+								echo $DefaultSize;							 
+							?>
+						</div>							
+
+						<div class="prod_price_area">
+							<div class="prod_price_amt">						
+								<span class="top_price">
+								<?php
+									echo $abstractProductBlock->getProductPrice($topsellingprod);
+								?>
+								</span>
+							</div>
+							<div class="prod_price_vat">
+							<?php echo __('(Inc. VAT)'); ?>
+							</div>
+						</div>						
+						
+                        <div class="product-item-inner">
+                            <div class="product actions product-item-actions">
+                                <div class="actions-primary">						
+                                    <?php if ($topsellingprod->isSaleable()){ ?>
+										<?php $cartqty = 0; if ($topsellingprod->isAvailable()){ $cartqty = 1; } ?>
+										
+										<?php $_product = $topsellingprod ; ?>
+										<?php $product_id = $_product->getId();?>
+			
+										<?php
+										    $IdDoProduto = $_product->getId();
+											$sku = $_product->getSku();
+
+											$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+											$cart = $objectManager->get('\Magento\Checkout\Model\Session'); 
+											// $cart = $objectManager->create('Magento\Checkout\Model\Session');
+
+											// retrieve quote items collection
+											$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+											// get array of all items what can be display directly
+											$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+											// retrieve quote items array
+											 $items = $cart->getQuote()->getAllItems();
+
+											foreach($items as $item) {
+												//echo "--".$item->getProduct_id();
+												 if($IdDoProduto == $item->getProduct_id()){
+													 //echo "uu-".$item->getProduct_id();
+														$cart_qty = $item->getQty();
+														$item_id = $item->getId();
+												 }         
+											  }
+											 ?>
+										
+										<form data-role="tocart-form"
+                                              data-product-sku="<?= $escaper->escapeHtml($_product->getSku()) ?>"
+                                              action="<?php echo $block->escapeUrl($block->getUrl('checkout/cart/add').'/uenc/product/'.$_product->getEntityId()); ?>"
+                                              method="post">
+                                            
+                                            <input type="hidden" name="product" value="<?php echo $_product->getEntityId(); ?>" />
+											<input type="hidden" name="uenc" value="" />
+											<input name="form_key" type="hidden" value="<?php echo rand(100000000000,999999999999); ?>" />
+
+                                            <div class="qty-box" style="display:none">
+                                                <a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+												<input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="<?= $cartqty * 1 ?>" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+                                                <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+                                            </div>
+                                            <!--qty Box start -->              
+                                            <div class="associated-product-qty-box-wrapper">
+                                                <?php $_product         = $_product; // section product ?> 
+                                                <?php $product_id       = $_product->getId();?>
+                                                <?php $itemQtyInCart    = $qtyupdateBlock->getItemQty($product_id); ?>
+                                                <?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+                                                <?php $type    = "top_selling"; ?>
+                                                <?php //if($productType == "simple"){ ?>
+                                                    <div  section="<?php echo $type; ?>"  id="qty_box_counter_<?php echo $product_id.$type; ?>" class="qty-box-counter <?= $itemQtyInCart > 0 ? "has-product" : "" ?>">
+                                                        <?= $itemQtyInCart > 0  ? $itemQtyInCart : "+" ?>
+                                                    </div>
+                                                <?php /* }else{ ?>
+                                                    <div class="qty-box-counter-not-simple"  section="<?php echo $type; ?>" >
+                                                        <a href="<?= $_product->getProductUrl(); ?>">
+                                                            <?= "+" ?>
+                                                        </a>
+                                                    </div>
+                                                <?php } */ ?> 
+                                                <div class="associated-product-qty" style="display:none;"> 
+                                                    <?php 
+                                                        $deleteCLsQty ="";
+                                                        if($itemQtyInCart ==1){
+                                                            $deleteCLsQty = "delete-qty-minus";
+                                                        }
+                                                    ?>
+                                                    <span 
+                                                        id="associated_product_qty_minus_id_<?php echo $product_id.$type; ?>"
+                                                        class="associated-product-qty-minus <?= $deleteCLsQty; ?>" 
+                                                        product_id="<?php echo $product_id; ?>" 
+                                                        section="<?php echo $type; ?>" 
+                                                        
+                                                    >-</span> 
+                                                    <span>
+                                                        <input name="quantity[<?php echo $product_id; ?>]" 
+                                                               id="<?= "quantity_".$product_id.$type; ?>"
+                                                               type="number" 
+                                                               class="associated-product-qty-input" 
+                                                               value="<?= $itemQtyInCart; ?>"               
+                                                               product_id="<?php echo $product_id; ?>"
+                                                               section="<?php echo $type; ?>"
+                                                        >
+                                                    </span>
+                                                    <span class="associated-product-qty-plus" 
+                                                          product_id="<?php echo $product_id; ?>" 
+                                                          section="<?php echo $type; ?>"
+                                                    >+ </span>
+                                                </div>
+                                            </div> 
+                                            <!--qty Box End -->
+                                        </form>
+										
+										
+										
+                                        
+									<?php } ?>	
+								</div>
+								
+								<div data-role="add-to-links" class="actions-secondary">
+									<?php echo $block->getLayout()->createBlock('Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist')->setProduct($topsellingprod)->setTemplate("Magento_Wishlist::catalog/product/list/addto/wishlist.phtml")->toHtml(); ?>
+                                </div>
+								
+							</div>
+						</div>
+						
+						<script type="text/x-magento-init">
+						{
+							"[data-role=tocart-form], .form.map.checkout": {
+								"catalogAddToCart": {
+									"product_sku": "<?= $escaper->escapeJs($topsellingprod->getSku()) ?>"
+								}
+							}
+						}
+						</script>
+								
+						</div>
+					</div>	
+				</li>					
+					
+					<?php 	
+				}
+			}				
+		}
+		echo '</ul>';
+	}
+	?>	
+</div>
+<!--Top Selling Products End-->
+
+<!--qty Box start -->
+    <script>
+        require([
+            "jquery", 'jquery/ui'
+        ], function ($) {
+
+            $( ".associated-product-qty-plus").click(function() {
+                var inputValAssociated = $(this).parent().find('.associated-product-qty-input').val();  
+
+                if(inputValAssociated !== '0'){
+                    var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                }else{
+                    var inputValAssociatedAdd = 1;
+                }  
+
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"add" ,product_id : product_id, qty : 1 }, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){                          
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }                  
+                    }
+                });  
+            });
+            
+            $(".associated-product-qty-minus").click(function() {
+                var inputValAssociated = parseInt($(this).parent().find('.associated-product-qty-input').val());              
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated - 1;
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxUpdateActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"update", product_id : product_id, qty : inputValAssociatedAdd}, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }
+
+                    }
+                });  
+            });
+
+            $(".associated-product-qty-input").keyup(function() {
+                var key = event.keyCode || event.charCode;
+
+                if( key == 8 || key == 46 ){
+                    return false;
+                }            
+                var inputValAssociated = parseInt($(this).val());     
+
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated;
+                    
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+
+                var product_id      = $(this).attr("product_id"); 
+                var section         = $(this).attr("section");
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxUpdateActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"update", product_id : product_id, qty : inputValAssociatedAdd}, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+
+                        }
+                    }
+                });  
+            });
+
+            $(document).on("blur", '.associated-product-qty-input', function() { 
+                var inputValAssociated = $(this).val(); 
+                if(!inputValAssociated){
+                    $(this).val(0); 
+                }
+            });
+
+
+            $(".qty-box-counter").click(function() {
+                $(this).fadeOut();    
+                $(this).next().fadeIn();
+                $(this).next().delay(8000).fadeOut();           
+                //$(this).stop(true,true).delay(8000).fadeOut();           
+                $(this).delay(8000).fadeIn();     
+                var has_product = $(this).hasClass("has-product");
+
+                if(!has_product){
+                    var inputQty = $(this).next().find('.associated-product-qty-input');
+                    var inputValAssociated = inputQty.val(); 
+
+                    if(inputValAssociated !== '0'){
+                        var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                    }else{
+                        var inputValAssociatedAdd = 1;
+                    }
+
+                    var inputValAssociatedAdd = 1;
+                    var product_id      = inputQty.attr("product_id");
+                     var section         = $(this).attr("section");
+
+                    //inputQty.val(inputValAssociatedAdd);
+                    var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddActionUrl()) ?>";
+                    jQuery("body").loader("show");
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: {mode :"add" ,product_id : product_id, qty : 1}, // serializes the form's elements.
+                        success: function (data)
+                        {
+                            jQuery("body").loader("hide");
+                            if(data.status_code ==1){                     
+                                qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                            }               
+                        }
+
+                    });    
+                }
+            });
+
+           function qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section){
+                var qty_box_counter_Id = "#qty_box_counter_"+product_id+section; 
+                $("#quantity_"+product_id+section).val(inputValAssociatedAdd); 
+                if(inputValAssociatedAdd > 0){
+                    $(qty_box_counter_Id).text(inputValAssociatedAdd); 
+                    $(qty_box_counter_Id).addClass("has-product"); 
+                }else{
+                    $(qty_box_counter_Id).text("+"); 
+                    $(qty_box_counter_Id).removeClass("has-product");
+                }
+
+                if(inputValAssociatedAdd == 1){
+                    $("#associated_product_qty_minus_id_"+product_id+section).addClass("delete-qty-minus"); 
+                }else{
+                    $("#associated_product_qty_minus_id_"+product_id+section).removeClass("delete-qty-minus");
+                }
+            }
+
+        });
+    </script>
+	
+<script>
+	require([
+		"jquery"
+	], function ($) {
+		$(document).on('click',".featured_cat_item",function(){
+			$('.featured_cat_item').removeClass("active");
+			$(this).addClass("active");
+			var cid = $(this).attr("fpc");
+			var ajaxUrl = '<?php echo $this->getUrl('topsellingproducts/ajaxfeaturedprod/featproducts/') ?>';
+			$.ajax({
+				url: ajaxUrl,
+				type: "POST",
+				data: {cid:cid},
+				dataType: "JSON",
+				showLoader: true,
+				success: function(data) {
+					$('#featured_cat_content').html(data.products);					
+					return true;					
+				}
+			});
+		});
+	});
+</script>	
+<style>
+.products_slider{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.products_slider.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider1{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider1.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider2{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider2.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider3{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider3.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider4{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider4.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider5{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider5.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider6{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider6.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider7{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider7.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider8{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider8.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider9{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider9.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+
+.featured_product_slider10{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    -webkit-transition: opacity 1s ease;
+}
+
+.featured_product_slider10.slick-initialized {
+    visibility: visible;
+    opacity: 1;    
+}
+</style>	
+    <!--qty Box end -->

@@ -1,0 +1,278 @@
+<?php 
+    $invoice_data = $block->getInvData();
+    //echo "<pre>";
+    //print_r($invoice_data); exit;
+    $invoice_date = date('d/m/Y', strtotime($invoice_data['invoicedate']));
+    $delivery_date = date('d/m/Y', strtotime($invoice_data['deliverydate']));  
+	
+	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+	$shipmentCollection = $objectManager->create('Magento\Sales\Model\Order\Shipment'); 
+	if(isset($invoice_data['increment_id'])){
+		
+		// print_r($invoice_data);	
+	}
+	
+?>
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice Html for PDF</title>
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<html>
+<head>
+    <style>
+    body {
+        font-family: sans-serif;
+        font-size: 10pt;
+		border: 1px solid #f00;
+    }
+
+    p {
+        margin: 0pt;
+    }
+
+    table.items {
+        border: 0.1mm solid #e7e7e7;
+    }
+
+    td {
+        vertical-align: top;
+    }
+
+    .items td {
+        border-left: 0.1mm solid #f00;
+        border-right: 0.1mm solid #f00;
+    }
+
+    table thead td {
+        text-align: center;
+        border: 0.1mm solid #f00;
+    }
+
+    .items td.blanktotal {
+        background-color: #EEEEEE;
+        border: 0.1mm solid #e7e7e7;
+        background-color: #FFFFFF;
+        border: 0mm none #e7e7e7;
+        border-top: 0.1mm solid #e7e7e7;
+        border-right: 0.1mm solid #e7e7e7;
+    }
+
+    .items td.totals {
+        text-align: right;
+        border: 0.1mm solid #e7e7e7;
+    }
+
+    .items td.cost {
+        text-align: "."center;
+    }
+	.line{border-bottom:1px solid #f00;width:100px;height:20px;display:inline-block;}
+    </style>
+</head>
+
+<body>
+    <!--<table width="100%" style="font-family: sans-serif;" cellpadding="10">
+        <tr>
+            <td width="100%" style="padding: 0px; text-align: center;">
+              <a href="#" target="_blank"><img src="" width="264" height="110" alt="Logo" align="center" border="0"></a>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%" style="text-align: center; font-size: 20px; font-weight: bold; padding: 0px;">
+              INVOICE
+            </td>
+        </tr>
+        <tr>
+          <td height="10" style="font-size: 0px; line-height: 10px; height: 10px; padding: 0px;">&nbsp;</td>
+        </tr>
+    </table>-->
+    <table width="100%" style="font-family: sans-serif; border-top: 1px solid #f00; border-bottom: 1px solid #f00;" cellpadding="10">
+		
+        <tr>
+            <td width="42%" style="color:#f00;">
+			<h4 style="margin-top:0;margin-bottom:10px;"><?php echo __("GYMA Food industries (L.L.C.)"); ?></h4>
+			<p><?php echo __("Dubai Investment Park 2"); ?><br>
+				<?php echo __("P.O. Box 1886, Dubai - U.A.E."); ?><br>
+				<?php echo __("Tel: +971 4 8857478 Fax: +971 4 8857479"); ?><br>
+				<?php echo __("E-mail: info@bayara.com"); ?><br>
+				<?php echo __("Tax registration No.: 100057515700003"); ?>
+			</p>
+			</td>
+            <td width="26%" style="padding: 0px; text-align: center;">
+              <img src = "<?php echo $block->getMediaUrl('/logo/stores/1/logo.png'); ?>" alt="" width="100px"/>
+            </td>
+            <td width="42%" style="text-align: right; color:#f00;">
+				<h4 style="margin-top:0;margin-bottom:10px;"><?php echo __("GYMA Food industries (L.L.C.)"); ?></h4>
+				<p><?php echo __("Dubai Investment Park 2"); ?><br>
+					<?php echo __("P.O. Box 1886, Dubai - U.A.E."); ?><br>
+					<?php echo __("Tel: +971 4 8857478 Fax: +971 4 8857479"); ?><br>
+					<?php echo __("E-mail: info@bayara.com"); ?><br>
+					<?php echo __("Tax registration No.: 100057515700003"); ?>
+				</p>
+			</td>
+        </tr>
+    </table>
+    <br>
+	
+
+    <table width="100%" style="font-family: sans-serif; font-size: 12px;" cellpadding="8">
+					<tr>
+						<td colspan="4" style="text-align:center;"><h2 style="margin-top:0;color:#f00;">TAX INVOICE</h2></td>
+					</tr>
+                    <tr>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Invoice"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['invoiceid'] ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Invoice Date"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_date; ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Customer Id"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['custaccount']; ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Sales Order No"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['increment_id'].'/'.$invoice_data['erpsalesid']; ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Customer Name"); ?></strong>
+                        </td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['deliveryname'] ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Due Date"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $delivery_date; ?></strong></td>
+                    </tr>
+					<tr>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __(""); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['deliveryaddress'] ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Currency"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['currency'] ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __(""); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['deliverycity'].', '.$invoice_data['delcountregid']; ?></strong></td>
+                        <!--<td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Delivery To"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['deliveryname'] ?></strong></td>-->
+                    </tr>
+					<tr>
+                        <!--<td style="padding: 0px 8px; line-height: 20px;"><strong>&nbsp;</strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;">&nbsp;</td>-->
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Phone"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['phonemobile']; ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Delivery Address"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['deliveryaddress'] ?><br><?php echo $invoice_data['deliverycity'] ?>, <?php echo $invoice_data['delcountregid'] ?></strong></td>
+                    </tr>
+                    <tr>
+                        <!--<td style="padding: 0px 8px; line-height: 20px;"><strong>&nbsp;</strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;">&nbsp;</td>-->
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo __("Tax Registration<br>Number"); ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong><?php echo $invoice_data['taxregnumber']; ?></strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;"><strong>&nbsp;</strong></td>
+                        <td style="padding: 0px 8px; line-height: 20px;">&nbsp;</td>
+                    </tr>
+                
+    </table>
+    <br>
+	
+    <table class="items" width="100%" style="font-size: 9px; border-collapse: collapse;border-color:#f00;" cellpadding="8">
+        <thead>
+            <tr>
+                <td width="10%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("CODE"); ?></strong></td>
+                <td width="20%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("PRODUCT DESCRIPTION"); ?></strong></td>
+                <td width="4%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("UNIT"); ?></strong></td>
+                <td width="4%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("QTY"); ?></strong></td>
+                <td width="7%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("UNIT PRICE"); ?></strong></td>
+                <td width="8%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("DISCOUNT"); ?></strong></td>
+                <td width="10%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("AMOUNT BEFORE VAT"); ?></strong></td>
+                <td width="8%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("VAT RATE %"); ?></strong></td>
+                <td width="4%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("VAT"); ?></strong></td>
+                <td width="10%" style="text-align: left; font-size:10px; color:#f00;"><strong><?php echo __("AMOUNT WITH VAT"); ?></strong></td>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ITEMS HERE -->
+            <?php
+                $salesinvoicelinelist = unserialize($invoice_data['salesinvoicelinelist']);
+                foreach ($salesinvoicelinelist as $sil) {
+                    $_product = $block->getProductDetails($sil->ItemId);
+                    ?>
+                        <tr>
+                            <td style="padding: 0px 7px; line-height: 20px;"><?php echo $sil->ItemId; ?></td>
+                            <td style="padding: 0px 7px; line-height: 20px;"><?php echo $_product->getName(); ?></td>
+                            <td style="padding: 0px 7px; line-height: 20px; text-align:center"><?php echo $sil->SalesUnitId; ?></td>
+                            <td style="text-align:center;"><?php echo $sil->SalesQty; ?></td>
+                            <td style="text-align:right;"><?php echo $sil->SalesPrice; ?></td>
+                            <td style="text-align:right;"><?php echo $sil->DiscAmountPerQty; ?></td>
+                            <td style="text-align:right;"><?php echo $sil->AmountBeforeTax; ?></td>
+                            <td style="text-align:center;"><?php echo $sil->TaxRate; ?></td>
+                            <td style="text-align:right;"><?php echo $sil->VATAmount; ?></td>
+                            <td style="text-align:right;"><?php echo $sil->AmountWithTax; ?></td>
+                        </tr>
+                    <?php
+                }
+
+            ?>    
+        </tbody>
+    </table>
+    <table class="" width="100%" style="font-size: 9px; border-collapse: collapse; border: 0;" cellpadding="8">
+        <tbody>
+            <tr>
+                <td width="55%"><?php echo __("Amount in words: UAE Dirham "); echo $invoice_data['amountinwords']." Only";  ?></td>
+                <td style="padding: 0px 10px; line-height: 10px; text-align: left;"><?php echo __("Sub Total"); ?></td>
+                <td style="text-align: right;"><?php echo $invoice_data['subtotal']; ?></td>
+            </tr>
+            <tr>
+                <td width="55%"></td>
+                <td style="padding: 0px 10px; line-height: 10px; text-align: left;"><?php echo __("Total discount 0 %"); ?></td>
+                <td style="text-align: right;"><?php echo "0.00"; ?></td>
+            </tr>
+            <tr>
+                <td width="55%"></td>
+                <td style="padding: 0px 10px; line-height: 10px; text-align: left;"><?php echo __("Shipping & Handling charges"); ?></td>
+                <td style="text-align: right;"><?php echo $invoice_data['chargeamount']; ?></td>
+            </tr>
+            <tr>
+                <td width="55%"><?php // echo __("Bank Account: "); ?></td>
+                <td style="padding: 0px 10px; line-height: 10px; text-align: left;"><?php echo __("Total Tax"); ?></td>
+                <td style="text-align: right; border-bottom: 1px solid #111;"><?php echo $invoice_data['vatamount']; ?></td>
+            </tr>
+            <tr>
+                <td width="55%"><?php // echo __("Bank Name: "); ?></td>
+                <td style="padding: 0px 10px; line-height: 10px; text-align: left;"><?php echo __("TOTAL"); ?></td>
+                <td style="text-align: right;"><?php echo $invoice_data['ordertotal']; ?></td> 
+            </tr>
+        </tbody>        
+    </table>        
+    <br>
+    <?php
+       echo $block->getCmsContent('erpinvoice_note');
+    ?>
+	<table width="100%" style="color:#f00;" >
+		<tr>
+			<td style="width:33.3%;padding: 0px 7px;font-size:11px;">
+				<h4><?php echo __("Goods received in good condition by"); ?></h4>
+				<span style="width:60px;display:inline-block;"><?php echo __("Customer's Signature"); ?><br>
+				<span style="width:60px;display:inline-block;"><?php echo __("Name"); ?><br>
+				<span style="width:60px;display:inline-block;"><?php echo __("Date"); ?>
+			</td>
+			<td style="width:33.3%;padding: 0px 7px;font-size:11px;">
+				<h4><?php echo __("Delivered by:"); ?></h4>
+				<span><?php echo __("Swftbox"); ?><br><br>
+				<span><?php echo __("Shipment No: ");?><?php echo $block->getShipmentIncrementId($invoice_data['increment_id']);?>
+			</td>
+			<td style="width:33.3%;padding: 0px 7px;font-size:11px;">
+				<h4><?php echo __("for GYMA FOOD INDUSTRIES L.L.C."); ?></h4>
+				<br><br>
+				<span><?php echo __("E & O E"); ?></span>
+				<span><?php echo __("Authorised Signatory"); ?></span>
+			</td>
+		</tr>
+		<tr>
+			<td style="width:90%;padding: 0px 7px;font-size:11px;" colspan="3"><span><?php echo __("<br>Electronically generated document and does not need signature.***"); ?></span></td>
+		</tr>
+	</table>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>

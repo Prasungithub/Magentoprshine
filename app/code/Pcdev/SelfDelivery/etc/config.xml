@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <carriers>
+            <selfdeliveryshipping>
+                <active>1</active>
+				<autoselect_method/>
+                <sallowspecific>0</sallowspecific>
+                <model>Pcdev\SelfDelivery\Model\Carrier\Shipping</model>
+                <name>Standard</name>
+                <price>0</price>
+                <title>SelfDeliveryShipping</title>
+                <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
+                <handling_type>F</handling_type>
+            </selfdeliveryshipping>
+        </carriers>
+    </default>
+</config>
