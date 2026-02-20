@@ -56,10 +56,10 @@ class View extends \Magento\Backend\Block\Widget\Container
 		
 		$grant_type = $this->_erphelperdata->getGrantType();
 		$client_id = $this->_erphelperdata->getClientId();
-		$client_secret = $this->_erphelperdata->getClientSecret();
+		$client_asecret = $this->_erphelperdata->getClientSecret();
 		$resource = $this->_erphelperdata->getResourceUrl();
 
-		$params = 'grant_type='.$grant_type.'&client_id='.$client_id.'&client_secret='.$client_secret.'&resource='.$resource.'';
+		$params = 'grant_type='.$grant_type.'&client_id='.$client_id.'&client_asecret='.$client_asecret.'&resource='.$resource.'';
 		$url = "https://login.testerver.com/pathoferp/oauth2/token/";		
 		
 		$curl = curl_init();
