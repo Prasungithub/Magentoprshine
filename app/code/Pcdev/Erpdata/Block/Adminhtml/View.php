@@ -53,10 +53,6 @@ class View extends \Magento\Backend\Block\Widget\Container
 		$data = [];
 		$data['status'] = 'fail';
 		$AuthResponseJson = '';
-		//$grant_type = 'client_credentials';
-		//$client_id = '37623d04-7b37-453d-96a6-0db0930cb98e';
-		//$client_secret = 'PXT8Q~FUnVWwTl3JNO_7RpRF4FL91QsUhDmbodi-';
-		//$resource = 'https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com';
 		
 		$grant_type = $this->_erphelperdata->getGrantType();
 		$client_id = $this->_erphelperdata->getClientId();
@@ -64,9 +60,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 		$resource = $this->_erphelperdata->getResourceUrl();
 
 		$params = 'grant_type='.$grant_type.'&client_id='.$client_id.'&client_secret='.$client_secret.'&resource='.$resource.'';
-		// $url = "https://login.microsoftonline.com/6896bc2e-b005-4f76-a82a-3aeb93072669/oauth2/token/";
-		$url = "https://login.microsoftonline.com/6896bc2e-b005-4f76-a82a-3aeb93072669/oauth2/token/";
-		
+		$url = "https://login.testerver.com/pathoferp/oauth2/token/";		
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -117,9 +111,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 			)]
 		);		
 		$params = json_encode($params);		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEcomInventTableServiceGroup/LTEcomInventTableService/GetInventTable";
-		
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEcomInventTableServiceGroup/LTEcomInventTableService/GetInventTable";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -175,8 +167,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 			)]
 		);		
 		$params = json_encode($params);		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComInventOnHandServiceGroup/LTEComInventOnHandService/GetOnhand";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComInventOnHandServiceGroup/LTEComInventOnHandService/GetOnhand";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -294,8 +285,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 			)]
 		);		
 		$params = json_encode($params);		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEcomUnitConvertServiceGroup/LTEcomUnitConvertService/GetUnitConvert";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEcomUnitConvertServiceGroup/LTEcomUnitConvertService/GetUnitConvert";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -367,8 +357,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 			)]
 		);		
 		$params = json_encode($params);		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComPriceListServiceGroup/LTEComPriceListService/GetBCPriceList";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComPriceListServiceGroup/LTEComPriceListService/GetBCPriceList";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -496,8 +485,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);
 		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesTableService/CreateSalesTable";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesTableService/CreateSalesTable";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$writer = new \Zend_Log_Writer_Stream(BP . '/var/log/order-sync-SENT-'.date('Y-m-d').'.log');
 		$logger = new \Zend_Log();
@@ -557,8 +545,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);
 		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesTableStatusService/GetSalesTableStatus";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesTableStatusService/GetSalesTableStatus";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -610,8 +597,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);
 		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesInvoiceService/GetSalesInvoice";
-		//$url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComSalesServiceGroup/LTEComSalesInvoiceService/GetSalesInvoice";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -713,8 +699,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);
 		
-		$url = "https://dev2e550c89df8498b8edevaos.cloudax.dynamics.com/api/services/LTEComJournalServiceGroup/LTEComJournalTableService/CreateJournalTable";
-		// $url = "https://bayara-uat.sandbox.operations.dynamics.com/api/services/LTEComJournalServiceGroup/LTEComJournalTableService/CreateJournalTable";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -1003,7 +988,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);	
 		
-		$url = "https://testapi.carlee.co/api/data/generic/order/replay";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -1101,7 +1086,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);	
 		
-		$url = "https://testapi.carlee.co/api/data/generic/order-update/replay";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -1162,7 +1147,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 	
 		$params = json_encode($params);	
 		
-		$url = "https://testapi.carlee.co/api/data/generic/order-cancel/replay";
+		$url = "https://testcode.api.testsandbox.com/serverpath/apiendpoint";
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
