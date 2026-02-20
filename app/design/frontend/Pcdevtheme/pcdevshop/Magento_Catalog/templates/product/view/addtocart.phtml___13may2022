@@ -1,0 +1,197 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var $block \Magento\Catalog\Block\Product\View */
+?>
+<?php $_product = $block->getProduct(); ?>
+<?php $buttonTitle = __('Add to Cart'); ?>
+<?php if ($_product->isSaleable()) :?>
+
+<div class="stock available" title="Availability" style="display:none">
+            <span>In stock</span>
+</div>
+
+
+<div class="box-tocart">
+    <div class="fieldset">
+        <?php if ($block->shouldRenderQuantity()) :?>
+        <div class="field qty" style="display:none" >
+            <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+            <div class="control qty-box">
+			<a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+                <input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="1" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+		    <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+            </div>
+			
+        </div>
+        <?php endif; ?>
+		
+		<?php
+											$cart_qty = 0;
+										    $item_id = 0;
+											?>
+											
+										<?php $product_id = $_product->getId();?>
+			
+										<?php
+										    $IdDoProduto = $_product->getId();
+											$sku = $_product->getSku();
+
+
+											$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+											 $cart = $objectManager->get('\Magento\Checkout\Model\Session'); 
+
+											// retrieve quote items collection
+											$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+											// get array of all items what can be display directly
+											$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+											// retrieve quote items array
+											 $items = $cart->getQuote()->getAllItems();
+											//print_r($items);
+											foreach($items as $item) {
+												//echo "--".$item->getProduct_id();
+												 if($IdDoProduto == $item->getProduct_id()){
+													 //echo "uu-".$item->getProduct_id();
+														$cart_qty = $item->getQty();
+														$item_id = $item->getId();
+												 }         
+											  }
+											  
+											  //echo "tt".$cart_qty."-".$item_id;
+											 ?>
+		
+		
+							<div class="associated-product-qty-box-wrapper" style="width: 170px;">
+								<div class="actions qty-box-counter-cart_<?php echo $product_id ; ?>" >
+								<button type="submit" <?php if($cart_qty > 0) { ?> style="display:none" <?php } else { ?> style="display:block" <?php } ?>
+										title="<?= $escaper->escapeHtmlAttr(__('Add to Cart')) ?>"
+										class="action tocart primary addd_<?php echo $product_id ; ?>"
+										disabled>
+									<span><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>												
+								</button>
+								<div id="qty_box_counter_<?php echo $product_id ; ?>" class="qty-box-counter adddd_<?php echo $product_id ; ?> <?php if($cart_qty > 0) { ?> has-product <?php } else { ?> <?php } ?>" style="display:none"><?php if($cart_qty > 0) { echo $cart_qty;?>  <?php } else { ?> + <?php } ?></div>
+								</div>
+								<div class="associated-product-qty associated-product-qty_<?php echo $product_id ; ?>" <?php if($cart_qty > 0) { ?> style="display:block" <?php } else { ?> style="display:none" <?php } ?>>
+									<span id="associated_product_qty_minus_id_<?php echo $product_id ; ?>" class="associated-product-qty-minus associated-product-qty-minus_<?php echo $product_id ; ?> <?php if(isset($cart_qty) && $cart_qty==1) { ?> delete-qty-minus <?php } ?> ">-</span>
+									<span>
+									<input type="hidden" value="<?php if($cart_qty > 0) { echo $cart_qty ; } else { echo 0; } ?>" class="qnty_<?php echo $product_id ; ?>">
+										<input name="quantity[<?php echo $product_id ; ?>]" id="quantity_<?php echo $product_id ; ?>" type="number" class="associated-product-qty-input associated-product-qty-input_<?php echo $product_id ; ?>" value="<?php if($cart_qty > 0) { echo $cart_qty ; } else { echo 1; } ?>" max="25" datastock="98" >
+									</span>
+									<span class="associated-product-qty-plus-add associated-product-qty-plus-add_<?php echo $product_id ; ?>">+</span>
+								</div>
+							</div>
+		</div>
+    </div>						
+
+<?php endif; ?>
+
+
+<script type="text/x-magento-init">
+    {
+        "#product_addtocart_form": {
+            "Magento_Catalog/js/validate-product": {}
+        }
+    }
+</script>
+
+
+                                    <script type="text/javascript"> 
+										require(['jquery', 'jquery/ui'], function($){
+											$(document).ready( function() {
+									 
+												setTimeout(function () {
+														$(".qty-box-counter-cart_<?php echo $product_id ; ?>").click(function(){
+													 //alert("ddd");
+													 
+														$('.adddd_<?php echo $product_id ; ?>').hide();
+														$('.associated-product-qty_<?php echo $product_id ; ?>').show();
+                                                        $('button.action.addd_<?php echo $product_id ; ?>').hide();	
+                                                        //location.reload();	
+                                                        $(".associated-product-qty-minus_<?php echo $product_id ; ?>").addClass("delete-qty-minus");														
+													});
+													
+													$(".associated-product-qty-plus-add_<?php echo $product_id ; ?>").click(function(){
+													$('button.action.addd_<?php echo $product_id ; ?>').trigger("click");
+													
+													var inputValAssociated = $(".associated-product-qty-input_<?php echo $product_id ; ?>").val();                            
+													var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+													$(".associated-product-qty-input_<?php echo $product_id ; ?>").val(inputValAssociatedAdd);				
+													$(".associated-product-qty-minus_<?php echo $product_id ; ?>").removeClass("delete-qty-minus");	
+													$(".adddd_<?php echo $product_id ; ?>").addClass("has-product");
+													$(".adddd_<?php echo $product_id ; ?>").html(inputValAssociatedAdd);
+													
+                                                    //$(".associated-product-qty").delay(5000).fadeOut();
+                                                    //$(".qty-box-counter").delay(500).fadeIn();													
+													});
+													
+													$(".associated-product-qty-minus_<?php echo $product_id ; ?>").click(function(){
+													//$('button.action.addd').trigger("click");
+													
+													var inputValAssociated = $(".associated-product-qty-input_<?php echo $product_id ; ?>").val();                            
+													var inputValAssociatedAdd = parseInt(inputValAssociated) - 1;
+													if(inputValAssociatedAdd >= 1){
+													$(".associated-product-qty-input_<?php echo $product_id ; ?>").val(inputValAssociatedAdd);
+													}
+													//$("#cart-item-<?php echo $item_id ; ?>-qty").val(inputValAssociatedAdd);
+													//$("#cart-item-<?php echo $item_id ; ?>-qty").next().trigger("click");
+													$(".adddd_<?php echo $product_id ; ?>").html(inputValAssociatedAdd);
+													$('.cart-item-qty[data-cart-item-id="<?php echo $sku; ?>"]').val(inputValAssociatedAdd);
+													$('.cart-item-qty[data-cart-item-id="<?php echo $sku; ?>"]').next().trigger("click");
+													
+													if(inputValAssociated == 2){
+															$(".associated-product-qty-minus_<?php echo $product_id ; ?>").addClass("delete-qty-minus"); 
+														}else{
+															$(".associated-product-qty-minus_<?php echo $product_id ; ?>").removeClass("delete-qty-minus");
+														}
+														
+													if(inputValAssociated == 1){
+														//$('.qty-box-counter-cart_<?php echo $product_id ; ?>').show();
+														//$(".adddd_<?php echo $product_id ; ?>").show();
+														$('.associated-product-qty_<?php echo $product_id ; ?>').hide();
+														$(".adddd_<?php echo $product_id ; ?>").removeClass("has-product");
+														$(".adddd_<?php echo $product_id ; ?>").html('+');
+														$(".qnty_<?php echo $product_id ; ?>").val(0);
+														$('button.action.addd_<?php echo $product_id ; ?>').show();	
+													}
+													
+													});
+													
+													
+												}, 1000);
+											});
+											
+											
+											$(".adddd_<?php echo $product_id ; ?>").click(function(){
+												
+												var inputValAssociated = $(".associated-product-qty-input_<?php echo $product_id ; ?>").val();
+												var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+												var qqq = $(".qnty_<?php echo $product_id ; ?>").val();
+												
+												if(qqq == 0){
+													
+                                                $(".associated-product-qty-minus_<?php echo $product_id ; ?>").addClass("delete-qty-minus");
+												$(".adddd_<?php echo $product_id ; ?>").addClass("has-product");
+													$(".adddd_<?php echo $product_id ; ?>").html(1);
+													$('button.action.addd_<?php echo $product_id ; ?>').trigger("click");
+													var qqq = parseInt(qqq) + 1;
+													$(".qnty_<?php echo $product_id ; ?>").val(qqq);
+													location.reload();
+													//alert($(".cart-item-qty").attr("data-cart-item-id"));
+												}
+                                                    
+																									
+											});	
+											
+											
+											
+											
+										});
+									 
+									</script>
+
+

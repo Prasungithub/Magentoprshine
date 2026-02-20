@@ -1,0 +1,37 @@
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<div if="isAddressDetailsVisible() && currentBillingAddress()" class="billing-address-details">
+    <text args="currentBillingAddress().prefix"></text>
+
+	<div class="cname"><text args="currentBillingAddress().firstname"></text>
+    <text args="currentBillingAddress().middlename"></text>
+    <text args="currentBillingAddress().lastname"></text></div>
+	
+	<div class="caddress"><text args="currentBillingAddress().suffix"></text><br/>
+    <text args="currentBillingAddress().street.join(', ')"></text><br/>
+    <text args="currentBillingAddress().city "></text>, <span class="shipregionid" text="currentBillingAddress().region"></span></div>
+    <div class="cpostcode"><text args="currentBillingAddress().postcode"></text><br/>
+    <text args="getCountryName(currentBillingAddress().countryId)"></text><br/>
+    <a if="currentBillingAddress().telephone" attr="'href': 'tel:' + currentBillingAddress().telephone" text="currentBillingAddress().telephone"></a><br/></div>
+
+	<div class="cextra">
+    <each args="data: currentBillingAddress().customAttributes, as: 'element'">
+		<div class="cextrafield" >
+        <text args="$parent.getCustomAttributeLabel(element)"></text>
+        <br/>
+		</div>
+    </each>
+	</div>
+	
+    <button visible="!isAddressSameAsShipping()"
+            type="button"
+            class="action action-edit-address"
+            click="editAddress">
+        <span translate="'Edit'"></span>
+    </button>
+</div>
+

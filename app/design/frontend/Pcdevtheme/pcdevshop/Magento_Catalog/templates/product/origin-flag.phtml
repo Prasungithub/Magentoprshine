@@ -1,0 +1,24 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+
+
+<?php
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$swatchHelper=$objectManager->get("Magento\Swatches\Helper\Media");
+$swatchCollection = $objectManager->create('Magento\Swatches\Model\ResourceModel\Swatch\Collection');
+// brand logo is my Visual Swatch attribute 
+$optionIdvalue=$this->getProduct()->getOrigin_country_flag(); 
+$swatchCollection->addFieldtoFilter('option_id',$optionIdvalue);
+$item=$swatchCollection->getFirstItem();
+//echo $swatchHelper->getSwatchAttributeImage('swatch_thumb', $item->getValue());
+//echo $swatchHelper->getSwatchAttributeImage('swatch_image', $item->getValue());
+ 
+ if($optionIdvalue){
+ ?>
+ 
+<div class="country-flag" data-role="country-flag">
+<img src="<?php echo $swatchHelper->getSwatchAttributeImage('swatch_thumb', $item->getValue()); ?>" alt="origin">
+</div>
+
+ <?php } ?>

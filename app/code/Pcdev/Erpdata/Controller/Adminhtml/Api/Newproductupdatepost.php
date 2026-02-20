@@ -304,11 +304,11 @@ class Newproductupdatepost extends \Magento\Backend\App\Action
 									// Default
 									$attribute_code_Arr = ['lifestyle'=>'lifestyle'];		
 								} elseif($attributeSetId == 9){
-									// Bayara
+									// Pcdevtheme
 									$attribute_code_Arr = ['lifestyle'=>'lifestyle'];	
 								} elseif($attributeSetId == 10){
 									// Nuts & Seeds
-									$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'bayara_type','flavor'=>'nuts_flavor'];			
+									$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'pcdevtheme_type','flavor'=>'nuts_flavor'];			
 								} elseif($attributeSetId == 11){
 									// Dried Fruits & Dates
 									$attribute_code_Arr = ['lifestyle'=>'lifestyle','type'=>'type_driedfrt'];	
@@ -497,7 +497,7 @@ class Newproductupdatepost extends \Magento\Backend\App\Action
 													->setSize($sizeAttributeOptionId)
 													->setCategoryIds($product['categories']) // array of category IDs, 2 = Default Category
 													->setLifestyle($lifestyle)
-													->setBayaraType($type)
+													->setPcdevthemeType($type)
 													->setTypeDriedfrt($type)
 													->setTypePulsesgrn($type)
 													->setNutsFlavor($flavor)	
@@ -603,7 +603,7 @@ class Newproductupdatepost extends \Magento\Backend\App\Action
 														 ->setDefaultChildProduct($default_child_product)											 
 														 ->setCategoryIds($product['categories'])
 														 ->setLifestyle($lifestyle)
-														 ->setBayaraType($type)
+														 ->setPcdevthemeType($type)
 														 ->setTypeDriedfrt($type)
 														 ->setTypePulsesgrn($type)
 														 ->setNutsFlavor($flavor)	

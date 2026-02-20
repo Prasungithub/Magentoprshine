@@ -1,0 +1,48 @@
+<?php
+$categoryattrblock = $block->getLayout()->createBlock('Citytech\Categoryattributes\Block\Categorymenuimage');
+$currentCategory = $categoryattrblock->getCurrentCategory();
+$cid = $currentCategory->getId();
+$cat_banner = $categoryattrblock->getCategotyBannerImagebyId($cid);
+$cat_banner_mob = $categoryattrblock->getCategotyMobBannerImagebyId($cid);
+?>
+<div class="category_banner">
+
+		<div class="category-animatedbanner">
+			<?php
+				$CategoryAnimatedbanner =  $currentCategory->getCategoryAnimatedbanner();
+				$CategoryAnimatedbanner_html = html_entity_decode($CategoryAnimatedbanner);				
+				$CategoryAnimatedContent = $categoryattrblock->getHtmlFilter($CategoryAnimatedbanner_html);				
+				echo $CategoryAnimatedContent;
+			?>
+		</div>
+
+	<!--<div class="cat_img">	
+		<?php /*
+		if($cat_banner){
+			?>	
+				<img src="<?php echo $this->getBaseUrl().''.$cat_banner; ?>" />
+			<?php
+		} else {
+		?>
+				<img src="<?php echo $block->getViewFileUrl('images/cat_no_image.jpg'); ?>" />
+		<?php
+		}
+		?>
+	</div>	
+	<div class="cat_img_mob" style="display: none;">	
+		<?php 
+		if($cat_banner_mob){
+			?>	
+				<img src="<?php echo $this->getBaseUrl().''.$cat_banner_mob; ?>" />
+			<?php
+		} else {
+		?>
+				<img class="noimg" src="<?php echo $block->getViewFileUrl('images/mob_cat_no_image.jpg'); ?>" />
+		<?php
+		} */
+		?>
+	</div>	
+	
+	<div class="cat_title"><h1><?php // echo $currentCategory->getName(); ?></h1></div>-->
+	
+</div>

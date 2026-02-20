@@ -1,0 +1,72 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var $block \Magento\Catalog\Block\Product\View */
+?>
+<?php $_product = $block->getProduct(); ?>
+<?php $buttonTitle = __('Add to Cart'); ?>
+<?php if ($_product->isSaleable()) :?>
+
+<div class="stock available" title="Availability">
+            <span>In stock</span>
+</div>
+
+<?php
+$IdDoProduto = $_product->getId();
+
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+ $cart = $objectManager->get('\Magento\Checkout\Model\Session'); 
+
+// retrieve quote items collection
+$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+// get array of all items what can be display directly
+$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+// retrieve quote items array
+ $items = $cart->getQuote()->getAllItems();
+
+foreach($items as $item) {
+	
+	 if($IdDoProduto == $item->getProduct_id()){
+            $cart_qty = $item->getQty();
+	 }         
+  }
+ ?>
+
+
+<div class="box-tocart">
+    <div class="fieldset">
+        <?php if ($block->shouldRenderQuantity()) :?>
+        <div class="field qty">
+            <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+            <div class="control qty-box">
+			<a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+                <input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="<?php if(isset($cart_qty)){ echo $cart_qty; } else { echo 1 ; }?>" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+		    <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+            </div>
+			
+        </div>
+        <?php endif; ?>
+        <div class="actions">
+            <button type="submit"
+                    title="<?= $block->escapeHtmlAttr($buttonTitle) ?>"
+                    class="action primary tocart"
+                    id="product-addtocart-button" disabled>
+                <span><?= $block->escapeHtml($buttonTitle) ?></span>
+            </button>
+            <?= $block->getChildHtml('', true) ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+<script type="text/x-magento-init">
+    {
+        "#product_addtocart_form": {
+            "Magento_Catalog/js/validate-product": {}
+        }
+    }
+</script>

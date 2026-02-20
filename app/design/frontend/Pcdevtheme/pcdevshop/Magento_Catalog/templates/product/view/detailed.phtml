@@ -1,0 +1,217 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// phpcs:disable Magento2.Templates.ThisInTemplate.FoundThis
+
+/**
+ * Product description template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Description
+ */
+?>
+<?php
+$_product = $this->getProduct();
+?>
+<?php
+$helper = $this->helper("Citytech\Customization\Helper\Customization");
+$lifestyles  = $_product->getLifestyle();
+$lifestylesArr = explode(",",$lifestyles);
+?>
+<div class="details-description-outer">
+<div class="details-description-inner">
+<div class="<?php if($_product->getIngredients()){ echo "details-description-left"; }else{ echo "details-description"; } ?>">
+<div class="details-description-left-content">
+<?php if($lifestyles){ ?>
+<?php if(count($lifestylesArr) >0 ) { ?>
+    <ul  class="lifestylesImg-wrapper">
+    <?php foreach($lifestylesArr as $lifestyleOptionId) { ?>
+        <?php $lifestylesImg= $helper->getLifestyleImgPath($lifestyleOptionId); ?>
+            <?php if($lifestylesImg && isset($lifestylesImg['image'])) { ?>
+                <?php 
+                    $attr = $_product->getResource()->getAttribute('lifestyle');
+                    $optionText ="";
+                    if ($attr->usesSource()) {
+                        $optionText = $attr->getSource()->getOptionText($lifestyleOptionId);
+                    }
+                ?> 
+                <li class="lifestylesImg">
+                    <img src="<?= $helper->getMediaUrl()."amasty/shopby/option_images/".$lifestylesImg['image']; ?>" title="<?= $optionText; ?>" />
+                </li>
+            <?php } ?>
+    <?php } ?>
+    </ul>
+<?php } ?>
+<?php } ?>
+<div class="details-descriptions">
+<p><b><?php echo __('DID YOU KNOW'); ?> </b><?php echo $_product->getData('did_you_know'); ?></p>
+<p class="sdesc-mobile"><?php echo $this->helper('Magento\Catalog\Helper\Output')->productAttribute($_product, $_product->getShort_description(), 'short_description') ?></p>
+<?php echo $this->helper('Magento\Catalog\Helper\Output')->productAttribute($_product, $_product->getDescription(), 'description') ?>
+</div>
+<?php if(trim($_product->getIngredients())): ?>
+<div class="details-description-ingredients">
+<h2><?= $escaper->escapeHtml(__('Ingredients')) ?></h2>
+<?php echo $_product->getIngredients(); ?>
+</div>
+<?php endif; ?>
+<?php if(trim($_product->getAllergen())): ?>
+<div class="details-description-allergen details-description-ingredients ali-mobile">
+<h2><?= $escaper->escapeHtml(__('Allergen')) ?></h2>
+<?php echo $_product->getAllergen(); ?>
+</div>
+<?php endif; ?>
+</div>
+</div>
+
+<div class="details-description-right">
+<?php
+$productNutritionAttributes=$_product->getAttributes();
+$attributeSetId = $_product->getAttributeSetId();
+$nutritionGroupId = $helper->__getAttributeGroupId($attributeSetId,'Nutrition Facts');
+if($nutritionGroupId != 0){
+//if(trim($_product->getData('nutrnfacts_serving_size'))){
+?>
+<div class="details-description-right-content">
+<div class="details-delivery"><p>
+<span class="shipped-icon"><img src="<?php echo $this->getViewFileUrl('images/shipped.png'); ?>" alt="<?= $escaper->escapeHtml(__('delivery notes')) ?>"></span>
+    <?php
+    echo $this->getLayout()
+            ->createBlock('Magento\Cms\Block\Block')
+            ->setBlockId('details-delivery')
+            ->toHtml();
+    ?>
+</p>
+</div>
+
+<!--Nutrition Facts-->
+<div class="details-description-nutrition">
+<h2><?php echo __('Nutrition Facts'); ?></h2>
+<span><?php echo __('Value'); ?> <?php echo $_product->getData('nutrnfacts_serving_size'); ?></span>
+<!--<div class="nutrition-heading">
+	<span class="highlight-left"><?php echo __('Characteristics'); ?></span>
+	<span class="highlight-right"><?php echo __('Value'); ?></span>
+	<span class="highlight-right"><?php echo __('%DV'); ?></span>
+</div>-->
+
+<div class="nutrition-outer">
+	<div class="nutrition-inner">
+				<?php if(trim($_product->getData('nutrnfacts_energy')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Calories'); ?></span>
+					<span class="fullwidth"><?php echo $_product->getData('nutrnfacts_energy'); ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_totalfat')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Total Fat'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_totalfat'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_totalfat_per')) != '') ? $_product->getData('nutrnfacts_totalfat_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_saturates')) != ''){ ?>
+				<div class="nutrition-row">
+					<span class="subspan"><?php echo __('saturated'); ?> </span>
+					<span><?php echo $_product->getData('nutrnfacts_saturates'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_saturated_per')) != '') ? $_product->getData('nutrnfacts_saturated_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_transfat')) != ''){ ?>
+				<div class="nutrition-row">
+					<span class="subspan"><?php echo __('Trans fat'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_transfat'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_transfat_per')) != '') ? $_product->getData('nutrnfacts_transfat_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_cholesterol')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Cholesterol'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_cholesterol'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_cholesterol_per')) != '') ? $_product->getData('nutrnfacts_cholesterol_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_sodium')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Sodium'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_sodium'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_sodium_per')) != '') ? $_product->getData('nutrnfacts_sodium_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_carbohydrate')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Total Carbohydrate'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_carbohydrate'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_carbohydrate_per')) != '') ? $_product->getData('nutrnfacts_carbohydrate_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_fiber')) != ''){ ?>
+				<div class="nutrition-row">
+					<span class="subspan"><?php echo __('Dietary Fiber'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_fiber'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_fiber_per')) != '') ? $_product->getData('nutrnfacts_fiber_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_sugars')) != ''){ ?>
+				<div class="nutrition-row">
+					<span class="subspan"><?php echo __('Total sugar'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_sugars'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_sugar_per')) != '') ? $_product->getData('nutrnfacts_sugar_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('includes_added_sugar')) != ''){ ?>
+				<div class="nutrition-row">
+					<span class="subspan"><?php echo __('Includes added sugar'); ?></span>
+					<span><?php echo $_product->getData('includes_added_sugar'); ?></span>
+					<span><?php echo (trim($_product->getData('includes_added_sugar_percentage')) != '') ? $_product->getData('includes_added_sugar_percentage')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_protein')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Protein'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_protein'); ?></span>
+					<span><?php echo (trim($_product->getData('nutrnfacts_protein_per')) != '') ? $_product->getData('nutrnfacts_protein_per')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_calcium')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Calcium'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_calcium'); ?></span>
+					<span><?php echo (trim($_product->getData('calcium_percentage')) != '') ? $_product->getData('calcium_percentage')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				<?php if(trim($_product->getData('nutrnfacts_iron')) != ''){ ?>
+				<div class="nutrition-row">
+					<span><?php echo __('Iron'); ?></span>
+					<span><?php echo $_product->getData('nutrnfacts_iron'); ?></span>
+					<span><?php echo (trim($_product->getData('iron_percentage')) != '') ? $_product->getData('iron_percentage')."%" : "-"; ?></span>
+				</div>
+				<?php } ?>
+				
+				<div class="nutrition-row-footer">
+					<span><?php echo __('Percent of Daily Values based on a 2000 kcal diet.'); ?></span>
+				</div>
+	</div>
+</div>
+</div>
+<!--Nutrition Facts-->
+
+
+</div>
+<?php
+//}
+}
+?>
+
+<?php if(trim($_product->getStorage())): ?>
+<div class="details-description-storage details-description-ingredients storage-mobile">
+<h2><span class="storage-icon"><img src="<?php echo $this->getViewFileUrl('images/storage-box.png'); ?>" alt="<?= $escaper->escapeHtml(__('Storage')) ?>"></span> <?= $escaper->escapeHtml(__('Storage')) ?></h2>
+<?php echo $_product->getStorage(); ?>
+</div>
+<?php endif; ?>
+</div>
+
+</div>
+</div>
+
+

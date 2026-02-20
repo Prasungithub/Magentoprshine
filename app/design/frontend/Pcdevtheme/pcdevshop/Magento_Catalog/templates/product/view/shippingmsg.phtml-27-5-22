@@ -1,0 +1,7 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+echo $this->getLayout()
+          ->createBlock('Magento\Cms\Block\Block')
+          ->setBlockId('details-delivery')
+          ->toHtml();
+?>

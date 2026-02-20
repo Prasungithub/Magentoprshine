@@ -1,0 +1,19 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+
+<div class="wdm-social-icons" id="wdm_social_icons" data-role="wdm-social-icons">
+
+<img src="<?php echo $this->getViewFileUrl('images/share.png'); ?>" alt="social">
+
+</div>
+
+<script>
+require([
+    "jquery", 'jquery/ui'
+], function ($) {
+    $( "#wdm_social_icons").click(function() {
+        $(".rewardssocial-buttons").toggle();
+    });
+});
+</script>  

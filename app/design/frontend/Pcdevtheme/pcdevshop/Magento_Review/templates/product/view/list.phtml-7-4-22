@@ -1,0 +1,264 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Magento\Review\Block\Product\View\ListView;
+
+/**
+ * @var ListView $block
+ * @var SecureHtmlRenderer $secureRenderer
+ * @var Escaper $escaper
+ */
+
+$_items = $block->getReviewsCollection()->getItems();
+$format = $block->getDateFormat() ?: \IntlDateFormatter::SHORT;
+
+?>
+
+
+<?php if (count($_items)): ?>
+    <div class="block review-list" id="customer-reviews">
+        <?php if (!$block->getHideTitle()): ?>
+            <div class="block-title">
+                <strong><?= $escaper->escapeHtml(__('Customer Reviews')) ?></strong>
+            </div>
+        <?php endif ?>
+        <div class="block-content">
+            <div class="toolbar review-toolbar">
+                <?= $block->getChildHtml('toolbar') ?>
+            </div>
+            <ol class="items review-items">
+                <?php foreach ($_items as $_review): ?>
+                    <li class="item review-item" itemscope itemprop="review" itemtype="http://schema.org/Review">
+                        <div class="review-title" itemprop="name">
+                            <?= $escaper->escapeHtml($_review->getTitle()) ?>
+                        </div>
+                        <?php if (count($_review->getRatingVotes())): ?>
+                            <div class="review-ratings">
+                                <?php foreach ($_review->getRatingVotes() as $_vote): ?>
+                                    <div class="rating-summary item"
+                                         itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">
+                                        <span class="label rating-label">
+                                            <span><?= $escaper->escapeHtml($_vote->getRatingCode()) ?></span>
+                                        </span>
+                                        <div class="rating-result"
+                                             id="review_<?= /* @noEscape */ $_review->getReviewId()
+                                                . '_vote_'
+                                                . $_vote->getVoteId() ?>"
+                                             title="<?= $escaper->escapeHtmlAttr($_vote->getPercent()) ?>%">
+                                            <meta itemprop="worstRating" content="1"/>
+                                            <meta itemprop="bestRating" content="100"/>
+                                            <span>
+                                                <span itemprop="ratingValue">
+                                                    <?= $escaper->escapeHtml($_vote->getPercent()) ?>%
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <?= /* @noEscape */ $secureRenderer->renderStyleAsTag(
+                                            'width:' . $_vote->getPercent() . '%',
+                                            'div#review_' . $_review->getReviewId()
+                                            . '_vote_' . $_vote->getVoteId() . ' span'
+                                        ) ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                        <div class="review-content-container">
+                            <div class="review-content" itemprop="description">
+                                <?= /* @noEscape */ nl2br($escaper->escapeHtml($_review->getDetail())) ?>
+                            </div>
+                            <div class="review-details">
+                                <p class="review-author">
+                                    <span class="review-details-label">
+                                        <?= $escaper->escapeHtml(__('Review by')) ?>
+                                    </span>
+                                    <strong class="review-details-value" itemprop="author">
+                                        <?= $escaper->escapeHtml($_review->getNickname()) ?>
+                                    </strong>
+                                </p>
+                                <p class="review-date">
+                                    <span class="review-details-label">
+                                        <?= $escaper->escapeHtml(__('Posted on')) ?>
+                                    </span>
+                                    <time class="review-details-value" itemprop="datePublished"
+                                          datetime="<?= $escaper->escapeHtmlAttr($block->formatDate(
+                                              $_review->getCreatedAt(),
+                                              $format
+                                          )) ?>">
+                                        <?= $escaper->escapeHtml(
+                                            $block->formatDate(
+                                                $_review->getCreatedAt(),
+                                                $format
+                                            )
+                                        ) ?>
+                                    </time>
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+            <div class="toolbar review-toolbar">
+                <?= $block->getChildHtml('toolbar') ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<div class="details-rating">
+	<div class="details-rating">
+		<div class="row">
+			<div class="col-sm-4">
+				<div class="rating-counter">
+					<div class="rating-star">
+					<?php
+						$pid = $block->getProduct()->getId(); 
+						$productId = $pid;
+						$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+						$reviewFactory = $objectManager->create('Magento\Review\Model\Review');
+						$product = $objectManager->create('Magento\Catalog\Model\Product')->load($productId);
+						$storeManager  = $objectManager->create('\Magento\Store\Model\StoreManagerInterface');
+						$storeId = $storeManager->getStore()->getStoreId();
+						$reviewFactory->getEntitySummary($product, $storeId);
+
+						$ratingSummary = $product->getRatingSummary()->getRatingSummary();
+						$reviewCount = $product->getRatingSummary()->getReviewsCount();
+						?>
+						<?php if($ratingSummary){ ?>
+						<div class="product-reviews-summary short dtls">
+							<div class="rating-summary">
+								<div title="<?php echo (int)$ratingSummary; ?>%" class="rating-result">
+									<span style="width:<?php echo (int)$ratingSummary; ?>%"><span><?php echo (int)$ratingSummary; ?>%</span></span>
+								</div>
+							</div>
+						</div>
+						<?php } ?>
+
+					</div>
+					<div class="rating-count">						
+					<span><?php echo $ratingSummary/20; ?> out of 5</span>	
+					</div>
+					<div class="rating-total">
+						<span><?php echo $reviewCount; ?> global rating</span>
+					</div>
+				</div>
+				
+				<div class="rating-range">
+					<div class="rating-range-slider">
+					
+					<?php
+					
+					$blockObj= $block->getLayout()->createBlock('Citytech\Ratingoverrite\Block\Product\View');
+					$revs = $blockObj->getAllStart($pid);
+					
+					
+					foreach($revs as $key => $rev){
+						?>
+						
+						<?php echo $key; ?> Star <progress id="star" value="<?php echo $rev['value']; ?>" max="<?php echo $reviewCount; ?>"> </progress><?php echo $rev['value']*100/$reviewCount; ?>% </br>
+						<?php
+					}
+					
+?>
+					
+					
+
+					</div>
+				</div>
+				
+				<div class="rating-info">
+					<p>How are ratings calculated?</p>
+					<div class="rating-info-content">
+
+					</div>
+				</div>
+				
+				<div class="rating-add">
+					<p>Share your thoughts with other customers</p>
+					<div class="rating-add-content">
+						<a href="btn-default-theme">Write you review</>
+					</div>
+				</div>
+				
+			</div>
+			<div class="col-sm-8">
+				<div class="review-panel">
+					<h2>Top Reviews</h2>
+					<div class="review-area">
+						<div class="review-item">
+							<div class="review-user">
+								<div class="review-user-icon">
+									<img src="">
+								</div>
+								<div class="review-user-name">
+									<span>Josephine</span>
+								</div>
+							</div>
+							<div class="review-star">
+								<div class="review-star-icon">
+									<img src="">
+								</div>
+								<div class="review-heading">
+									<span>Best dates ever</span>
+								</div>
+							</div>
+							<div class="review-info">
+								<div class="review-date">
+									<span>Reviewed in Dubai on 28 January, 2022
+								</div>
+								<div class="review-product-name">
+									<span>Product Name:</span><span class="name">Lorem Ipsum</span>
+								</div>
+								<div class="review-Varification">
+									<span>Varified Purchase</span>
+								</div>
+								<div class="review-text">
+									<span>Lorem Ipsum sit dollar amet. Lorem Ipsum sit dollar amet. Lorem Ipsum sit dollar amet</span>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="review-item">
+							<div class="review-user">
+								<div class="review-user-icon">
+									<img src="">
+								</div>
+								<div class="review-user-name">
+									<span>Josephine</span>
+								</div>
+							</div>
+							<div class="review-star">
+								<div class="review-star-icon">
+									<img src="">
+								</div>
+								<div class="review-heading">
+									<span>Best dates ever</span>
+								</div>
+							</div>
+							<div class="review-info">
+								<div class="review-date">
+									<span>Reviewed in Dubai on 28 January, 2022
+								</div>
+								<div class="review-product-name">
+									<span>Product Name:</span><span class="name">Lorem Ipsum</span>
+								</div>
+								<div class="review-Varification">
+									<span>Varified Purchase</span>
+								</div>
+								<div class="review-text">
+									<span>Lorem Ipsum sit dollar amet. Lorem Ipsum sit dollar amet. Lorem Ipsum sit dollar amet</span>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

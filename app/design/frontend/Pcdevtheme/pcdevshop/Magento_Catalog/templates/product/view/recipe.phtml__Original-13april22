@@ -1,0 +1,5 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+
+<div class="recipe" ><a href="#">Full Recipe Range</a></div>

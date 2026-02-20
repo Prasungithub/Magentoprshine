@@ -1,0 +1,102 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// phpcs:disable Magento2.Templates.ThisInTemplate.FoundThis
+
+/**
+ * Product description template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Description
+ */
+?>
+<?php
+$_product = $this->getProduct();
+?>
+<?php
+$helper = $this->helper("Citytech\Customization\Helper\Customization");
+$lifestyles  = $_product->getLifestyle();
+$lifestylesArr = explode(",",$lifestyles);
+?>
+<?php if($lifestyles){ ?>
+<?php if(count($lifestylesArr) >0 ) { ?>
+    <ul  class="lifestylesImg-wrapper">
+    <?php foreach($lifestylesArr as $lifestyleOptionId) { ?>
+        <?php $lifestylesImg= $helper->getLifestyleImgPath($lifestyleOptionId); ?>
+            <?php if($lifestylesImg && isset($lifestylesImg['image'])) { ?>
+                <?php 
+                    $attr = $_product->getResource()->getAttribute('lifestyle');
+                    $optionText ="";
+                    if ($attr->usesSource()) {
+                        $optionText = $attr->getSource()->getOptionText($lifestyleOptionId);
+                    }
+                ?> 
+                <li class="lifestylesImg">
+                    <img src="<?= $helper->getMediaUrl()."amasty/shopby/option_images/".$lifestylesImg['image']; ?>" title="<?= $optionText; ?>" />
+                </li>
+            <?php } ?>
+    <?php } ?>
+    </ul>
+<?php } ?>
+<?php } ?>
+<div class="details-description-outer">
+<div class="details-description-inner">
+<div class="<?php if($_product->getIngredients()){ echo "details-description-left"; }else{ echo "details-description"; } ?>">
+<div class="details-description-left-content">
+<?php echo $this->helper('Magento\Catalog\Helper\Output')->productAttribute($_product, $_product->getDescription(), 'description') ?>
+</div>
+</div>
+<?php if($_product->getIngredients()){ ?>
+<div class="details-description-right">
+<div class="details-description-right-content">
+<div class="details-description-ingredients">
+<h2>Ingredients</h2>
+<?php echo $_product->getIngredients(); ?>
+</div>
+<div class="details-description-nutrition">
+<h2>Nutrition Facts</h2>
+<span>Serving size <?php echo $_product->getData('nutrnfacts_serving_size'); ?></span>
+<p class="highlight">Amount per serving</p>
+<table>
+<tr>
+<td>Calories</td>
+<td><?php echo $_product->getData('nutrnfacts_calories'); ?></td>
+</tr>
+<tr>
+<td>Total Fat</td>
+<td><?php echo $_product->getData('nutrnfacts_totalfat'); ?>%</td>
+</tr>
+<tr>
+<td>Cholesterol</td>
+<td><?php echo $_product->getData('nutrnfacts_cholesterol'); ?>%</td>
+</tr>
+<tr>
+<td>Sodium</td>
+<td><?php echo $_product->getData('nutrnfacts_sodium'); ?>%</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td><?php echo $_product->getData('nutrnfacts_protein'); ?>%</td>
+</tr>
+<tr>
+<td>Calcium</td>
+<td><?php echo $_product->getData('nutrnfacts_calcium'); ?>%</td>
+</tr>
+<tr>
+<td>Iron</td>
+<td><?php echo $_product->getData('nutrnfacts_iron'); ?>%</td>
+</tr>
+</table>
+</div>
+<!--<div class="details-description-ingredients">
+<h2>Closest store by</h2>
+<p>Lorem lipsum1, Lorem lipsum2, Lorem lipsum3, Lorem lipsum4, Lorem lipsum5, Lorem lipsum6, Lorem lipsum7</p>
+</div>-->
+</div>
+</div>
+<?php } ?>
+</div>
+</div>
+

@@ -1,0 +1,26 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+
+<div class="page-title-wrapper-mobile product">
+    <h1 class="page-title">
+        <span class="base" data-ui-id="page-title-wrapper" itemprop="name"><?= $_product->getName(); ?></span>    
+    </h1>
+    
+    <div class="wdm-social-icons-mobile" id="wdm_social_icons_mobile" data-role="wdm-social-icons">
+
+    <img src="<?php echo $this->getViewFileUrl('images/share.png'); ?>" alt="social">
+
+    </div>
+
+</div>
+
+<script>
+    require([
+        "jquery", 'jquery/ui'
+    ], function ($) {
+        $( "#wdm_social_icons_mobile").click(function() {
+            $(".rewardssocial-buttons").toggle();
+        });
+    });
+</script>  

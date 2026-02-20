@@ -1,0 +1,332 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+use Magento\Framework\App\Action\Action;
+
+?>
+<?php
+/**
+ * Product list template
+ *
+ * @var $block \Magento\Catalog\Block\Product\ListProduct
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+<?php
+$_productCollection = $block->getLoadedProductCollection();
+/** @var \Magento\Catalog\Helper\Output $_helper */
+$_helper = $block->getData('outputHelper');
+?>
+<?php if (!$_productCollection->count()): ?>
+    <div class="message info empty">
+        <div><?= $escaper->escapeHtml(__('We can\'t find products matching the selection.')) ?></div>
+    </div>
+<?php else: ?>
+    <?= $block->getToolbarHtml() ?>
+    <?= $block->getAdditionalHtml() ?>
+    <?php
+    if ($block->getMode() === 'grid') {
+        $viewMode = 'grid';
+        $imageDisplayArea = 'category_page_grid';
+        $showDescription = false;
+        $templateType = \Magento\Catalog\Block\Product\ReviewRendererInterface::SHORT_VIEW;
+    } else {
+        $viewMode = 'list';
+        $imageDisplayArea = 'category_page_list';
+        $showDescription = true;
+        $templateType = \Magento\Catalog\Block\Product\ReviewRendererInterface::FULL_VIEW;
+    }
+    /**
+     * Position for actions regarding image size changing in vde if needed
+     */
+    $pos = $block->getPositioned();
+    ?>
+	<?php $cat_search = $this->getRequest()->getParam('cq'); ?>
+    <div class="products wrapper <?= /* @noEscape */ $viewMode ?> products-<?= /* @noEscape */ $viewMode ?>">
+        <ol class="products list items product-items">
+            <?php /** @var $_product \Magento\Catalog\Model\Product */ ?>
+            <?php foreach ($_productCollection as $_product): ?>
+			
+			<?php
+				if(isset($cat_search) && !empty($cat_search)){
+					if (strpos(strtolower($_product->getName()), strtolower($cat_search)) === false){
+						continue;
+					}
+				}
+			?>
+			<?php $product_id = $_product->getId();?>
+			
+			<?php
+				$IdDoProduto = $_product->getId();
+
+
+				$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+				 $cart = $objectManager->get('\Magento\Checkout\Model\Session'); 
+
+				// retrieve quote items collection
+				$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+				// get array of all items what can be display directly
+				$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+				// retrieve quote items array
+				 $items = $cart->getQuote()->getAllItems();
+
+				foreach($items as $item) {
+					
+					 if($IdDoProduto == $item->getProduct_id()){
+						// $cart_qty = 0;
+						 //$item_id = 0;
+							//echo $cart_qty.$product_id = $item->getQty();
+							//$item_id.$product_id = $item->getId();
+					 }         
+				  }
+				 ?>
+			
+			
+            <li class="item product product-item">
+                <div class="product-item-info"
+                     id="product-item-info_<?= /* @noEscape */ $_product->getId() ?>"
+                     data-container="product-<?= /* @noEscape */ $viewMode ?>">
+                    <?php
+                    $productImage = $block->getImage($_product, $imageDisplayArea);
+                    if ($pos != null) {
+                        $position = 'left:' . $productImage->getWidth() . 'px;'
+                            . 'top:' . $productImage->getHeight() . 'px;';
+                    }
+                    ?>
+					
+					<?php 
+						// Show product as New tag
+						$nowdatetime = strtotime(date("d-m-Y"));
+						$FromDate_strtotime = 0;
+						$ToDate_strtotime = 0;
+						
+						$newFromDate = $_product->getNewsFromDate();
+						$newToDate = $_product->getNewsToDate();
+						if($newFromDate){
+							$FromDateCreate = date_create($newFromDate);
+							$FromDateChangeFormat = date_format($FromDateCreate,"d-m-Y");
+							$FromDate_strtotime = strtotime(date($FromDateChangeFormat));
+						}
+						
+						if($newToDate){
+							$ToDateCreate = date_create($newToDate);
+							$ToDateChangeFormat = date_format($ToDateCreate,"d-m-Y");
+							$ToDate_strtotime = strtotime(date($ToDateChangeFormat));
+						}
+
+						if($FromDate_strtotime > 0 && $FromDate_strtotime <= $nowdatetime){
+							$newProduct = 1;
+						} elseif($ToDate_strtotime > 0 && $ToDate_strtotime >= $nowdatetime){
+							$newProduct = 1;
+						} else {
+							$newProduct = 0;
+						}
+						
+						if($newProduct == 1){
+							?>
+								<div class="prod_new"><?php echo __('New'); ?></div>
+							<?php
+						}	
+					?>
+					
+                    <?php // Product Image ?>
+                    <a href="<?= $escaper->escapeUrl($_product->getProductUrl()) ?>"
+                       class="product photo product-item-photo"
+                       tabindex="-1">
+                        <?= $productImage->toHtml() ?>
+                    </a>
+                    <div class="product details product-item-details">
+                        <?php $_productNameStripped = $block->stripTags($_product->getName(), null, true); ?>
+                        <strong class="product name product-item-name">
+                            <a class="product-item-link"
+                               href="<?= $escaper->escapeUrl($_product->getProductUrl()) ?>">
+                                <?=/* @noEscape */ $_helper->productAttribute($_product, $_product->getName(), 'name')?>
+                            </a>
+                        </strong>
+						<div class="prod_reviews_summary_area">	
+							<?= $block->getReviewsSummaryHtml($_product, $templateType) ?>
+						</div>	
+						<div class="prod_price_area">
+							<div class="prod_price_amt">
+								<?= /* @noEscape */ $block->getProductPrice($_product) ?>
+							</div>
+							<div class="prod_price_vat">
+							<?php echo __('(Inc. VAT)'); ?>
+							</div>
+						</div>
+
+                        <?= $block->getProductDetailsHtml($_product) ?>
+
+                        <div class="product-item-inner">
+                            <div class="product actions product-item-actions">
+                                <div class="actions-primary">
+                                    <?php if ($_product->isSaleable()):?>
+										<?php $cartqty = 0; if ($_product->isAvailable()){ $cartqty = 1; } ?>
+                                        <?php $postParams = $block->getAddToCartPostParams($_product); ?>
+                                        <form data-role="tocart-form"
+                                              data-product-sku="<?= $escaper->escapeHtml($_product->getSku()) ?>"
+                                              action="<?= $escaper->escapeUrl($postParams['action']) ?>"
+                                              method="post">
+                                            <?php $optionsData = $block->getData('viewModel')->getOptionsData($_product); ?>
+                                            <?php foreach ($optionsData as $optionItem): ?>
+                                                <input type="hidden"
+                                                       name="<?= $escaper->escapeHtml($optionItem['name']) ?>"
+                                                       value="<?= $escaper->escapeHtml($optionItem['value']) ?>">
+                                            <?php endforeach; ?>
+                                            <input type="hidden"
+                                                   name="product"
+                                                   value="<?= /* @noEscape */ $postParams['data']['product'] ?>">
+                                            <input type="hidden"
+                                                   name="<?= /* @noEscape */ Action::PARAM_NAME_URL_ENCODED ?>"
+                                                   value="<?=
+                                                   /* @noEscape */ $postParams['data'][Action::PARAM_NAME_URL_ENCODED]
+                                                    ?>">
+                                            <?= $block->getBlockHtml('formkey') ?>
+
+                                            <div class="qty-box" style="display:none">
+                                                <a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+												<input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="<?= $cartqty * 1 ?>" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+                                                <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+                                            </div>
+                                         <div class="associated-product-qty-box-wrapper" style="width: 170px;">
+                                            <div class="actions qty-box-counter-cart_<?php echo $product_id ; ?>" <?php if(isset($item_id)) { ?> style="display:none" <?php } else { ?> style="display:block" <?php } ?>>
+                                            <button type="submit" style="display:none;"
+                                                    title="<?= $escaper->escapeHtmlAttr(__('Add to Cart')) ?>"
+                                                    class="action tocart primary addd_<?php echo $product_id ; ?>"
+                                                    disabled>
+                                                <span><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>												
+                                            </button>
+											<div id="qty_box_counter_<?php echo $product_id ; ?>" class="qty-box-counter addd_<?php echo $product_id ; ?>">+</div>
+											</div>
+											<div class="associated-product-qty associated-product-qty_<?php echo $product_id ; ?>" <?php if(isset($item_id)) { ?> style="display:block" <?php } else { ?> style="display:none" <?php } ?>>
+												<span id="associated_product_qty_minus_id_<?php echo $product_id ; ?>" class="associated-product-qty-minus associated-product-qty-minus_<?php echo $product_id ; ?> <?php if(isset($cart_qty) && $cart_qty==1) { ?> delete-qty-minus <?php } ?> "> -</span>
+												<span>
+													<input name="quantity[<?php echo $product_id ; ?>]" id="quantity_<?php echo $product_id ; ?>" type="number" class="associated-product-qty-input associated-product-qty-input_<?php echo $product_id ; ?>" value="<?php if(isset($cart_qty)) { echo $cart_qty ; } else { echo 1; } ?>" max="25" datastock="98" >
+												</span>
+												<span class="associated-product-qty-plus-add associated-product-qty-plus-add_<?php echo $product_id ; ?>">+ </span>
+											</div>
+										</div>
+                                        </form>
+										
+										
+										<script type="text/javascript"> 
+										require(['jquery', 'jquery/ui'], function($){
+											$(document).ready( function() {
+									 
+												setTimeout(function () {
+														$(".qty-box-counter-cart_<?php echo $product_id ; ?>").click(function(){
+													 //alert("ddd");
+														$('.addd_<?php echo $product_id ; ?>').hide();
+														$('.associated-product-qty_<?php echo $product_id ; ?>').show();
+														
+													});
+													
+													$(".associated-product-qty-plus-add_<?php echo $product_id ; ?>").click(function(){
+													$('button.action.addd_<?php echo $product_id ; ?>').trigger("click");
+													
+													var inputValAssociated = $(".associated-product-qty-input_<?php echo $product_id ; ?>").val();                            
+													var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+													$(".associated-product-qty-input_<?php echo $product_id ; ?>").val(inputValAssociatedAdd);
+													$(".update_qty").val(inputValAssociatedAdd);				
+													$(".associated-product-qty-minus_<?php echo $product_id ; ?>").removeClass("delete-qty-minus");				
+													});
+													
+													$(".associated-product-qty-minus_<?php echo $product_id ; ?>").click(function(){
+													//$('button.action.addd').trigger("click");
+													
+													var inputValAssociated = $(".associated-product-qty-input_<?php echo $product_id ; ?>").val();                            
+													var inputValAssociatedAdd = parseInt(inputValAssociated) - 1;
+													$(".associated-product-qty-input_<?php echo $product_id ; ?>").val(inputValAssociatedAdd);
+													$(".update_qty").val(inputValAssociatedAdd);
+													
+													
+													if(inputValAssociated == 2){
+															$(".associated-product-qty-minus_<?php echo $product_id ; ?>").addClass("delete-qty-minus"); 
+														}else{
+															$(".associated-product-qty-minus_<?php echo $product_id ; ?>").removeClass("delete-qty-minus");
+														}
+														
+													if(inputValAssociated == 1){
+														$('.addd_<?php echo $product_id ; ?>').show();
+														$('.associated-product-qty_<?php echo $product_id ; ?>').hide();
+													}
+													
+													});
+													
+													
+												}, 100);
+											});
+										});
+									 
+									</script>
+										
+										
+                                    <?php else:?>
+                                        <?php if ($_product->isAvailable()):?>
+                                            <div class="stock available">
+                                                <span><?= $escaper->escapeHtml(__('In stock')) ?></span></div>
+                                        <?php else:?>
+                                            <div class="stock unavailable">
+                                                <span><?= $escaper->escapeHtml(__('Out of stock')) ?></span></div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                                <?= strpos($pos, $viewMode . '-primary') ?
+                                    /* @noEscape */ $secureRenderer->renderStyleAsTag(
+                                        $position,
+                                        'product-item-info_' . $_product->getId() . ' div.actions-primary'
+                                    ) : '' ?>
+                                <div data-role="add-to-links" class="actions-secondary">
+                                    <?php if ($addToBlock = $block->getChildBlock('addto')): ?>
+                                        <?= $addToBlock->setProduct($_product)->getChildHtml() ?>
+                                    <?php endif; ?>
+                                </div>
+                                <?= strpos($pos, $viewMode . '-secondary') ?
+                                    /* @noEscape */ $secureRenderer->renderStyleAsTag(
+                                        $position,
+                                        'product-item-info_' . $_product->getId() . ' div.actions-secondary'
+                                    ) : '' ?>
+                            </div>
+                            <?php if ($showDescription): ?>
+                                <div class="product description product-item-description">
+                                    <?= /* @noEscape */ $_helper->productAttribute(
+                                        $_product,
+                                        $_product->getShortDescription(),
+                                        'short_description'
+                                    ) ?>
+                                    <a href="<?= $escaper->escapeUrl($_product->getProductUrl()) ?>"
+                                       title="<?= /* @noEscape */ $_productNameStripped ?>"
+                                       class="action more"><?= $escaper->escapeHtml(__('Learn More')) ?></a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?= strpos($pos, $viewMode . '-actions') ?
+                /* @noEscape */ $secureRenderer->renderStyleAsTag(
+                    $position,
+                    'product-item-info_' . $_product->getId() . ' div.product-item-actions'
+                ) : '' ?>
+            </li>
+            <?php endforeach; ?>
+        </ol>
+    </div>
+    <?= $block->getChildBlock('toolbar')->setIsBottom(true)->toHtml() ?>
+    <script type="text/x-magento-init">
+    {
+        "[data-role=tocart-form], .form.map.checkout": {
+            "catalogAddToCart": {
+                "product_sku": "<?= $escaper->escapeJs($_product->getSku()) ?>"
+            }
+        }
+    }
+    </script>
+<?php endif; ?>
+
+
+

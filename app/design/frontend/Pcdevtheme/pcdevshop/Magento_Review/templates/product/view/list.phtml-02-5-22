@@ -1,0 +1,189 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Magento\Review\Block\Product\View\ListView;
+
+/**
+ * @var ListView $block
+ * @var SecureHtmlRenderer $secureRenderer
+ * @var Escaper $escaper
+ */
+
+$_items = $block->getReviewsCollection()->getItems();
+$format = $block->getDateFormat() ?: \IntlDateFormatter::SHORT;
+
+?>
+<style>
+#additional{
+	display:none;
+}
+#reviews h2{
+	display:none;
+}
+</style>
+<?php if($block->getProduct()){ ?>
+<div class="details-rating">
+	<div class="details-rating">
+		<div class="row">
+			<div class="col-sm-4">
+				<div class="rating-counter">
+					<div class="rating-star">
+					<?php
+					
+						$pid = $block->getProduct()->getId(); 
+						$productId = $pid;
+						$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+						$reviewFactory = $objectManager->create('Magento\Review\Model\Review');
+						$product = $objectManager->create('Magento\Catalog\Model\Product')->load($productId);
+						$storeManager  = $objectManager->create('\Magento\Store\Model\StoreManagerInterface');
+						$storeId = $storeManager->getStore()->getStoreId();
+						$reviewFactory->getEntitySummary($product, $storeId);
+
+						$ratingSummary = $product->getRatingSummary()->getRatingSummary();
+						$reviewCount = $product->getRatingSummary()->getReviewsCount();
+						?>
+						<?php if($ratingSummary){ ?>
+						<div class="product-reviews-summary short dtls">
+							<div class="rating-summary">
+								<div title="<?php echo (int)$ratingSummary; ?>%" class="rating-result">
+									<span style="width:<?php echo (int)$ratingSummary; ?>%"><span><?php echo (int)$ratingSummary; ?>%</span></span>
+								</div>
+							</div>
+						</div>
+						<?php } ?>
+
+					</div>
+					<div class="rating-count">						
+					<span><?php echo $ratingSummary/20; ?> out of 5</span>	
+					</div>
+					<div class="rating-total">
+						<span><?php if($reviewCount){ echo $reviewCount; }else{ echo 0 ;} ?> global rating</span>
+					</div>
+				</div>
+				
+				<div class="rating-range">
+					<div class="rating-range-slider">
+					
+					<?php
+					
+					$blockObj= $block->getLayout()->createBlock('Citytech\Ratingoverrite\Block\Product\View');
+					$revs = $blockObj->getAllStart($pid);
+					
+					
+					foreach($revs as $key => $rev){
+						?>
+						
+						<div class="star-count-range"><div class="star-count-left"><?php echo $key; ?> Star</div> <div id="star" class="star-count-middle" value="<?php echo $rev['value']; ?>" max="<?php echo $reviewCount; ?>"><div class=" " style="width:<?php if($reviewCount){ echo round($rev['value']*100/$reviewCount); }else{ echo 0 ;} ?>% ;" > </div> </div><div class="star-count-right"><?php if($reviewCount){ echo round($rev['value']*100/$reviewCount); }else{ echo 0 ;} ?>%</div></div>
+						<?php
+					}
+					
+?>
+					
+
+					</div>
+				</div>
+				
+				<div class="rating-add">
+					<p>Share your thoughts with other customers</p>
+					<div class="rating-add-content">
+					<?php
+					$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+					$customerSession = $objectManager->get('Magento\Customer\Model\Session');
+					if($customerSession->isLoggedIn()) {
+					   // customer login action
+					?>
+						<button id="button">
+							<span><?= $block->escapeHtml(__('Write your review')) ?></span>
+						</button>						
+				    <?php }else{ ?>	
+					<a href="#social-login-popup" class="social-login-btn" data-effect="mfp-zoom-out">Write your review</a>
+					<?php
+					}
+					?>							
+					</div>					
+				</div>
+				
+			</div>
+			<div class="col-sm-8">
+				<div class="review-panel">
+					<h3>Top Reviews</h3>
+					<div class="review-area">
+						<?php foreach ($_items as $_review): ?>
+						<div class="review-item">
+							<div class="review-user">
+								<div class="review-user-icon">
+									<img src="">
+								</div>
+								<div class="review-user-name">
+									<span><?= $escaper->escapeHtml($_review->getNickname()) ?></span>
+								</div>
+							</div>
+							<div class="review-star">
+								<div class="review-star-icon">
+									<?php if (count($_review->getRatingVotes())): ?>
+                            <div class="review-ratings">
+                                <?php foreach ($_review->getRatingVotes() as $_vote): ?>
+                                    <div class="rating-summary item"
+                                         itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">                                       
+                                        <div class="rating-result"
+                                             id="review_<?= /* @noEscape */ $_review->getReviewId()
+                                                . '_vote_'
+                                                . $_vote->getVoteId() ?>"
+                                             title="<?= $escaper->escapeHtmlAttr($_vote->getPercent()) ?>%">
+                                            <meta itemprop="worstRating" content="1"/>
+                                            <meta itemprop="bestRating" content="100"/>
+                                            <span>
+                                                <span itemprop="ratingValue">
+                                                    <?= $escaper->escapeHtml($_vote->getPercent()) ?>%
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <?= /* @noEscape */ $secureRenderer->renderStyleAsTag(
+                                            'width:' . $_vote->getPercent() . '%',
+                                            'div#review_' . $_review->getReviewId()
+                                            . '_vote_' . $_vote->getVoteId() . ' span'
+                                        ) ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+								</div>
+								<div class="review-heading">
+									<span><?= $escaper->escapeHtml($_review->getTitle()) ?></span>
+								</div>
+							</div>
+							<div class="review-info">
+								<div class="review-date">
+									<span>Reviewed on <time class="review-details-value" itemprop="datePublished"
+                                          datetime="<?= $escaper->escapeHtmlAttr($block->formatDate(
+                                              $_review->getCreatedAt(),
+                                              $format
+                                          )) ?>">
+                                        <?= $escaper->escapeHtml(
+                                            $block->formatDate(
+                                                $_review->getCreatedAt(),
+                                                $format
+                                            )
+                                        ) ?>
+                                    </time></span>
+								</div>
+								
+								<div class="review-text">
+									<span><?= $escaper->escapeHtml($_review->getDetail()) ?></span>
+								</div>
+							</div>
+							
+						</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php } ?>

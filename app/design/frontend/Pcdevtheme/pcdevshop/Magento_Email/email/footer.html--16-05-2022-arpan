@@ -1,0 +1,36 @@
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<!--@subject {{trans "Footer"}} @-->
+<!--@vars {
+"var store.frontend_name":"Store Name"
+} @-->
+
+                    <!-- End Content -->
+                    </td>
+                </tr>
+                <tr>
+                    <td class="footer" style="background-color: #ffffff; padding: 0 10px;">
+                        <p class="closing">Thank you,</p>
+                        <p class="closing">{{trans "%store_name" store_name=$store.frontend_name}} Team!</p>
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="footer" style="padding: 15px;background: #f5ffe7;border-top: 2px solid #8dc63f;padding-bottom: 0;">
+                    	<ul style="margin-top: 0; margin-bottom: 10px;list-style: none;text-align: center;">
+                    		<li style="margin-top: 0; margin-bottom: 10px;width: 50px;margin: 10px;display: inline-block;"><a href="{{config path='web/unsecure/base_url'}}"><img src="{{view url='images/website.png'}}"></a></li>
+                    		<li style="margin-top: 0; margin-bottom: 10px;width: 50px;margin: 10px;display: inline-block;"><a><img src="{{view url='images/mail_facebook.png'}}"></a></li>
+                    		<li style="margin-top: 0; margin-bottom: 10px;width: 50px;margin: 10px;display: inline-block;"><a><img src="{{view url='images/nail_twitter.png'}}"></a></li>
+                    		<li style="margin-top: 0; margin-bottom: 10px;width: 50px;margin: 10px;display: inline-block;"><a><img src="{{view url='images/mail_linkedin.png'}}"></a></li>
+                    	</ul>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<!-- End wrapper table -->
+</body>

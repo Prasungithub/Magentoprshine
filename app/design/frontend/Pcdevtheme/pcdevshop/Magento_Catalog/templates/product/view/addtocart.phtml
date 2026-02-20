@@ -1,0 +1,701 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var $block \Magento\Catalog\Block\Product\View */
+?>
+<?php $_product = $block->getProduct(); ?>
+<?php $buttonTitle = __('Add to Cart'); ?>
+<!--qty Box start -->
+<?php $qtyupdateBlock =  $this->getLayout()->createBlock("Citytech\Customization\Block\Cart\Qtyupdate"); ?>
+<!--qty Box end -->
+<?php if ($_product->isSaleable()) :?>
+
+<div class="stock available" title="Availability">
+    <span>In stock</span>
+</div>
+
+
+<div class="box-tocart">
+    <div class="fieldset">
+        <?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+        <?php if($productType == "simple"){ ?>
+            <!--qty Box start -->              
+            <div class="associated-product-qty-box-wrapper">
+                <?php $_product         = $_product; // section product ?> 
+                <?php $product_id       = $_product->getId();?>
+                <?php $itemQtyInCart    = $qtyupdateBlock->getItemQty($product_id); ?>
+                <?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+                <?php $type    = "product_details"; ?>
+                <?php if($productType == "simple"){ ?>
+                    <div section="<?php echo $type; ?>" id="qty_box_counter_details_<?php echo $product_id.$type; ?>" class="qty-box-counter <?= $itemQtyInCart > 0 ? "has-product" : "" ?>">
+                        <span class="btn-text"><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>	
+                        <span class="btn-count"><?= $itemQtyInCart > 0  ? $itemQtyInCart : "+" ?></span>
+                    </div>
+                <?php }else{ ?>
+                    <div class="qty-box-counter-not-simple" section="<?php echo $type; ?>">
+                        <a href="<?= $_product->getProductUrl(); ?>">
+                            <?= "+" ?>
+                        </a>
+                    </div>
+                <?php } ?> 
+                <div class="associated-product-qty" style="display:none;"> 
+                    <?php 
+                        $deleteCLsQty ="";
+                        if($itemQtyInCart ==1){
+                            $deleteCLsQty = "delete-qty-minus";
+                        }
+                    ?>
+                    <span 
+                        id="associated_product_qty_minus_id_<?php echo $product_id.$type; ?>"
+                        class="associated-product-qty-minus <?= $deleteCLsQty; ?>" 
+                        product_id="<?php echo $product_id; ?>"
+                        section="<?php echo $type; ?>" 
+                    >-</span> 
+                    <span>
+                        <input name="quantity[<?php echo $product_id; ?>]" 
+                               id="<?= "quantity_".$product_id.$type; ?>"
+                               type="number" 
+                               class="associated-product-qty-input" 
+                               value="<?= $itemQtyInCart; ?>"               
+                               product_id="<?php echo $product_id; ?>" 
+                               section="<?php echo $type; ?>" 
+                        >
+                    </span>
+                    <span class="associated-product-qty-plus" 
+                          product_id="<?php echo $product_id; ?>" 
+                          section="<?php echo $type; ?>" 
+                    >+ </span>
+                </div>
+            </div> 
+            <!--qty Box End -->
+        
+        <?php }elseif($productType == "configurable"){ ?>           
+            <!--qty Box start -->              
+            <div class="associated-product-qty-box-wrapper">
+                <?php $_product         = $_product; // section product ?> 
+                <?php $product_id       = $_product->getId();?>
+                <?php $itemQtyInCart    = $qtyupdateBlock->getItemQty($product_id); ?>
+                <?php $productType    = $qtyupdateBlock->getProductType($_product); ?>
+                <?php $type    = "product_details"; ?>
+                    <div section="<?php echo $type; ?>" id="qty_box_counter_details_<?php echo $product_id.$type; ?>" class="qty-box-counter">
+                        <span class="btn-text"><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>	
+                        <span class="btn-count"><?= "+" ?></span>
+                    </div>
+              
+                <div class="associated-product-qty" style="display:none;"> 
+                    <?php 
+                        $deleteCLsQty ="";
+                        if($itemQtyInCart ==1){
+                            $deleteCLsQty = "delete-qty-minus";
+                        }
+                    ?>
+                    <span 
+                        id="associated_product_qty_minus_id_<?php echo $product_id.$type; ?>"
+                        class="associated-product-qty-minus <?= $deleteCLsQty; ?>" 
+                        product_id="<?php echo $product_id; ?>"
+                        section="<?php echo $type; ?>" 
+                    >-</span> 
+                    <span>
+                        <input name="quantity[<?php echo $product_id; ?>]" 
+                               id="<?= "quantity_".$product_id.$type; ?>"
+                               type="number" 
+                               class="associated-product-qty-input" 
+                               value="<?= $itemQtyInCart; ?>"               
+                               product_id="<?php echo $product_id; ?>" 
+                               section="<?php echo $type; ?>" 
+                        >
+                    </span>
+                    <span class="associated-product-qty-plus" 
+                          product_id="<?php echo $product_id; ?>" 
+                          section="<?php echo $type; ?>" 
+                    >+ </span>
+                </div>
+            </div>
+            <div class="actions">
+            <button type="submit"
+                        style="display:none;"
+                        title="<?= $block->escapeHtmlAttr($buttonTitle) ?>"
+                        class="action primary tocart"
+                        id="product-addtocart-button" disabled>
+                    <span><?= $block->escapeHtml($buttonTitle) ?></span>
+                </button>
+                <?= $block->getChildHtml('', true) ?>
+            </div>
+            <!--qty Box End -->
+        
+
+        <?php }else{ ?>
+        <?php if ($block->shouldRenderQuantity()) :?>
+        <div class="field qty" style="display:none" >
+            <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+            <div class="control qty-box">
+			<a href="javascript:void(0)" class="qtyminus"><i class="fa fa-minus"></i></a>
+                <input type="text" name="qty" id="qty<?php echo $_product->getId(); ?>" maxlength="4" min="1" value="1" title="<?php /* @escapeNotVerified */ echo __('Qty') ?>" class="input-text qty cart-item-qty" data-validate="<?= $block->escapeHtmlAttr(json_encode($block->getQuantityValidators())) ?>"/>
+		    <a href="javascript:void(0)" class="qtyplus"><i class="fa fa-plus"></i></a>
+            </div>
+			
+        </div>
+        <?php endif; ?>
+        <div class="actions">
+            <button type="submit"
+                    title="<?= $block->escapeHtmlAttr($buttonTitle) ?>"
+                    class="action primary tocart"
+                    id="product-addtocart-button" disabled>
+                <span><?= $block->escapeHtml($buttonTitle) ?></span>
+            </button>
+            <?= $block->getChildHtml('', true) ?>
+        </div>
+        <?php } ?>
+		
+         
+    </div>
+</div>						
+
+<?php endif; ?>
+
+
+<script type="text/x-magento-init">
+    {
+        "#product_addtocart_form": {
+            "Magento_Catalog/js/validate-product": {}
+        }
+    }
+</script>
+<?php if($productType == "configurable"){ ?>
+<!--qty Box start -->
+    <script>
+        require([
+            "jquery", 'jquery/ui'
+        ], function ($) {
+            
+            
+            $(document).on("click", '.swatch-attribute', function() {                 
+                            getConfigSelectedData();
+                        });
+                        
+            $(document).on("click", '.options-list', function() {                 
+                getConfigSelectedData();
+            });
+
+            function getConfigSelectedData(){
+                $(".qty-box-counter").fadeIn();    
+                $(".associated-product-qty").fadeOut();
+                
+                var attribute_option_id = $(".swatch-opt .swatch-attribute").attr('data-option-selected');  
+                var product_custom_option_value = $("input:radio.product-custom-option:checked").val();
+                if(attribute_option_id && product_custom_option_value){                               
+                    var product_id ='<?= $_product->getId(); ?>';
+                    var product_custom_option_id_text = $("input:radio.product-custom-option:checked").attr("id");
+
+                    var myArray = product_custom_option_id_text.split("_");
+                    var product_custom_option_id = myArray[1];
+                    //alert(product_custom_option_id);
+
+                    var attribute_id = $(".swatch-opt .swatch-attribute").attr('data-attribute-id');
+                    var section         = "<?= $type; ?>";
+                    var url = "<?= $block->escapeUrl($qtyupdateBlock->getConfigurableCartQtyActionUrl()) ?>";
+                    jQuery("body").loader("show");
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { product_id:product_id, attribute_id : attribute_id,attribute_option_id:attribute_option_id,product_custom_option_id:product_custom_option_id,product_custom_option_value:product_custom_option_value }, // serializes the form's elements.
+                        success: function (data)
+                        {
+
+                            jQuery("body").loader("hide");
+                            if(data.status_code == 1){                          
+                                qtyBoxCounterUpdate(product_id,data.qty,section);
+                            }  
+
+                        }
+                    });  
+
+                }
+            }
+
+            $( ".associated-product-qty-plus").click(function() {
+            
+
+                var attribute_option_id = $(".swatch-opt .swatch-attribute").attr('data-option-selected');  
+                var product_custom_option_value = $("input:radio.product-custom-option:checked").val();
+                if(!attribute_option_id || !product_custom_option_value || typeof product_custom_option_value === 'undefined'){
+                    $("#product-addtocart-button").trigger("click");
+                    return false;
+                }
+                
+                var product_custom_option_id_text = $("input:radio.product-custom-option:checked").attr("id");
+                var myArray = product_custom_option_id_text.split("_");
+                var product_custom_option_id = myArray[1];
+                var attribute_id = $(".swatch-opt .swatch-attribute").attr('data-attribute-id');
+                
+                
+                
+                
+                var inputValAssociated = $(this).parent().find('.associated-product-qty-input').val();  
+
+                if(inputValAssociated !== '0'){
+                    var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                }else{
+                    var inputValAssociatedAdd = 1;
+                }  
+
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddConfigurableActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        mode :"add" ,
+                        product_id : product_id, 
+                        qty : 1,
+                        attribute_id : attribute_id,
+                        attribute_option_id:attribute_option_id,
+                        product_custom_option_id:product_custom_option_id,
+                        product_custom_option_value:product_custom_option_value 
+                    }, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){                          
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }                  
+                    }
+                });  
+            });
+            
+            $(".associated-product-qty-minus").click(function() {
+                
+                var attribute_option_id = $(".swatch-opt .swatch-attribute").attr('data-option-selected');  
+                var product_custom_option_value = $("input:radio.product-custom-option:checked").val();
+                if(!attribute_option_id || !product_custom_option_value || typeof product_custom_option_value === 'undefined'){
+                    $("#product-addtocart-button").trigger("click");
+                    return false;
+                }
+                
+                var product_custom_option_id_text = $("input:radio.product-custom-option:checked").attr("id");
+                var myArray = product_custom_option_id_text.split("_");
+                var product_custom_option_id = myArray[1];
+                var attribute_id = $(".swatch-opt .swatch-attribute").attr('data-attribute-id');
+                
+                
+                
+                
+                
+                
+                
+                
+                var inputValAssociated = parseInt($(this).parent().find('.associated-product-qty-input').val());              
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated - 1;
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddConfigurableActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        mode :"update", 
+                        product_id : product_id, 
+                        qty : inputValAssociatedAdd, 
+                        attribute_id : attribute_id,
+                        attribute_option_id:attribute_option_id,
+                        product_custom_option_id:product_custom_option_id,
+                        product_custom_option_value:product_custom_option_value }, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }
+
+                    }
+                });  
+            });
+
+            $(".associated-product-qty-input").keyup(function() {
+                
+                
+                var attribute_option_id = $(".swatch-opt .swatch-attribute").attr('data-option-selected');  
+                var product_custom_option_value = $("input:radio.product-custom-option:checked").val();
+                if(!attribute_option_id || !product_custom_option_value || typeof product_custom_option_value === 'undefined'){
+                    $("#product-addtocart-button").trigger("click");
+                    return false;
+                }
+                
+                var product_custom_option_id_text = $("input:radio.product-custom-option:checked").attr("id");
+                var myArray = product_custom_option_id_text.split("_");
+                var product_custom_option_id = myArray[1];
+                var attribute_id = $(".swatch-opt .swatch-attribute").attr('data-attribute-id');
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                var key = event.keyCode || event.charCode;
+
+                if( key == 8 || key == 46 ){
+                    return false;
+                }            
+                var inputValAssociated = parseInt($(this).val());     
+
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated;
+                    
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+
+                var product_id      = $(this).attr("product_id"); 
+                var section         = $(this).attr("section");
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddConfigurableActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        mode :"update", 
+                        product_id : product_id, 
+                        qty : inputValAssociatedAdd, 
+                        attribute_id : attribute_id,
+                        attribute_option_id:attribute_option_id,
+                        product_custom_option_id:product_custom_option_id,
+                        product_custom_option_value:product_custom_option_value
+                    }, // serializes the form's elements. 
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+
+                        }
+                    }
+                });  
+            });
+
+            $(document).on("blur", '.associated-product-qty-input', function() { 
+                var inputValAssociated = $(this).val(); 
+                if(!inputValAssociated){
+                    $(this).val(0); 
+                }
+            });
+
+
+            $(".qty-box-counter").click(function() {
+                
+                var attribute_option_id = $(".swatch-opt .swatch-attribute").attr('data-option-selected');  
+                var product_custom_option_value = $("input:radio.product-custom-option:checked").val();
+                if(!attribute_option_id || !product_custom_option_value || typeof product_custom_option_value === 'undefined'){
+                    $("#product-addtocart-button").trigger("click");
+                    return false;
+                }
+                
+                
+             
+                var product_custom_option_id_text = $("input:radio.product-custom-option:checked").attr("id");
+                var myArray = product_custom_option_id_text.split("_");
+                var product_custom_option_id = myArray[1];
+                var attribute_id = $(".swatch-opt .swatch-attribute").attr('data-attribute-id');
+                
+                
+                
+                
+                $(this).fadeOut();    
+                $(this).next().fadeIn();
+                $(this).next().delay(8000).fadeOut();           
+                //$(this).stop(true,true).delay(8000).fadeOut();           
+                $(this).delay(8000).fadeIn();     
+                var has_product = $(this).hasClass("has-product");
+
+                if(!has_product){
+                    var inputQty = $(this).next().find('.associated-product-qty-input');
+                    var inputValAssociated = inputQty.val(); 
+
+                    if(inputValAssociated !== '0'){
+                        var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                    }else{
+                        var inputValAssociatedAdd = 1;
+                    }
+
+                    var inputValAssociatedAdd = 1;
+                    var product_id      = inputQty.attr("product_id");
+                     var section         = $(this).attr("section");
+
+                    //inputQty.val(inputValAssociatedAdd);
+                    var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddConfigurableActionUrl()) ?>";
+                    jQuery("body").loader("show");
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: {
+                            mode :"add" ,
+                            product_id : product_id,
+                            qty : 1, 
+                            attribute_id : attribute_id,
+                            attribute_option_id:attribute_option_id,
+                            product_custom_option_id:product_custom_option_id,
+                            product_custom_option_value:product_custom_option_value
+                        }, // serializes the form's elements.
+                        success: function (data)
+                        {
+                            jQuery("body").loader("hide");
+                            if(data.status_code ==1){                     
+                                qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                            }               
+                        }
+
+                    });    
+                }
+            });
+
+           function qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section){
+                var qty_box_counter_Id = "#qty_box_counter_"+product_id+section; 
+                $("#quantity_"+product_id+section).val(inputValAssociatedAdd); 
+                
+                
+                
+                var qty_box_details_counter_Id = "#qty_box_counter_details_"+product_id+section; 
+                if(qty_box_details_counter_Id){
+                     var addHtml ='<span class="btn-text"><?= $escaper->escapeHtml(__("Add to Cart")) ?></span>';
+                    if(inputValAssociatedAdd > 0){
+                       
+                        addHtml +='<span class="btn-count">'+inputValAssociatedAdd+'</span>';
+                        $(qty_box_details_counter_Id).html(addHtml); 
+                        $(qty_box_details_counter_Id).addClass("has-product"); 
+                    }else{
+                        addHtml +='<span class="btn-count">+</span>';
+                        $(qty_box_details_counter_Id).html(addHtml); 
+                        $(qty_box_details_counter_Id).removeClass("has-product");
+                    }
+                }
+                
+                
+                
+                
+                
+                if(inputValAssociatedAdd > 0){
+                    $(qty_box_counter_Id).text(inputValAssociatedAdd); 
+                    $(qty_box_counter_Id).addClass("has-product"); 
+                }else{
+                    $(qty_box_counter_Id).text("+"); 
+                    $(qty_box_counter_Id).removeClass("has-product");
+                }
+
+                if(inputValAssociatedAdd == 1){
+                    $("#associated_product_qty_minus_id_"+product_id+section).addClass("delete-qty-minus"); 
+                }else{
+                    $("#associated_product_qty_minus_id_"+product_id+section).removeClass("delete-qty-minus");
+                }
+            }
+
+        });
+    </script>  
+    <!--qty Box end -->
+<?php }else{ ?>
+    
+    <!--qty Box start -->
+    <script>
+        require([
+            "jquery", 'jquery/ui'
+        ], function ($) {
+
+            $( ".associated-product-qty-plus").click(function() {
+                var inputValAssociated = $(this).parent().find('.associated-product-qty-input').val();  
+
+                if(inputValAssociated !== '0'){
+                    var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                }else{
+                    var inputValAssociatedAdd = 1;
+                }  
+
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"add" ,product_id : product_id, qty : 1 }, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){                          
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }                  
+                    }
+                });  
+            });
+            
+            $(".associated-product-qty-minus").click(function() {
+                var inputValAssociated = parseInt($(this).parent().find('.associated-product-qty-input').val());              
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated - 1;
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+                //$(this).parent().find('.associated-product-qty-input').val(inputValAssociatedAdd);
+                var product_id      = $(this).attr("product_id");
+                var section         = $(this).attr("section");
+
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxUpdateActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"update", product_id : product_id, qty : inputValAssociatedAdd}, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                        }
+
+                    }
+                });  
+            });
+
+            $(".associated-product-qty-input").keyup(function() {
+                var key = event.keyCode || event.charCode;
+
+                if( key == 8 || key == 46 ){
+                    return false;
+                }            
+                var inputValAssociated = parseInt($(this).val());     
+
+                if(inputValAssociated > 0 ){
+                    var inputValAssociatedAdd = inputValAssociated;
+                    
+                }else{
+                    var inputValAssociatedAdd = 0;
+                }
+
+                var product_id      = $(this).attr("product_id"); 
+                var section         = $(this).attr("section");
+                var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxUpdateActionUrl()) ?>";
+                jQuery("body").loader("show");
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {mode :"update", product_id : product_id, qty : inputValAssociatedAdd}, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        jQuery("body").loader("hide");
+                        if(data.status_code ==1){
+                            qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+
+                        }
+                    }
+                });  
+            });
+
+            $(document).on("blur", '.associated-product-qty-input', function() { 
+                var inputValAssociated = $(this).val(); 
+                if(!inputValAssociated){
+                    $(this).val(0); 
+                }
+            });
+
+
+            $(".qty-box-counter").click(function() {
+                $(this).fadeOut();    
+                $(this).next().fadeIn();
+                $(this).next().delay(8000).fadeOut();           
+                //$(this).stop(true,true).delay(8000).fadeOut();           
+                $(this).delay(8000).fadeIn();     
+                var has_product = $(this).hasClass("has-product");
+
+                if(!has_product){
+                    var inputQty = $(this).next().find('.associated-product-qty-input');
+                    var inputValAssociated = inputQty.val(); 
+
+                    if(inputValAssociated !== '0'){
+                        var inputValAssociatedAdd = parseInt(inputValAssociated) + 1;
+                    }else{
+                        var inputValAssociatedAdd = 1;
+                    }
+
+                    var inputValAssociatedAdd = 1;
+                    var product_id      = inputQty.attr("product_id");
+                     var section         = $(this).attr("section");
+
+                    //inputQty.val(inputValAssociatedAdd);
+                    var url = "<?= $block->escapeUrl($qtyupdateBlock->getAjaxAddActionUrl()) ?>";
+                    jQuery("body").loader("show");
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: {mode :"add" ,product_id : product_id, qty : 1}, // serializes the form's elements.
+                        success: function (data)
+                        {
+                            jQuery("body").loader("hide");
+                            if(data.status_code ==1){                     
+                                qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section);
+                            }               
+                        }
+
+                    });    
+                }
+            });
+
+           function qtyBoxCounterUpdate(product_id,inputValAssociatedAdd,section){
+                var qty_box_counter_Id = "#qty_box_counter_"+product_id+section; 
+                $("#quantity_"+product_id+section).val(inputValAssociatedAdd); 
+                
+                
+                
+                var qty_box_details_counter_Id = "#qty_box_counter_details_"+product_id+section; 
+                if(qty_box_details_counter_Id){
+                     var addHtml ='<span class="btn-text"><?= $escaper->escapeHtml(__("Add to Cart")) ?></span>';
+                    if(inputValAssociatedAdd > 0){
+                       
+                        addHtml +='<span class="btn-count">'+inputValAssociatedAdd+'</span>';
+                        $(qty_box_details_counter_Id).html(addHtml); 
+                        $(qty_box_details_counter_Id).addClass("has-product"); 
+                    }else{
+                        addHtml +='<span class="btn-count">+</span>';
+                        $(qty_box_details_counter_Id).html(addHtml); 
+                        $(qty_box_details_counter_Id).removeClass("has-product");
+                    }
+                }
+                
+                
+                
+                
+                
+                if(inputValAssociatedAdd > 0){
+                    $(qty_box_counter_Id).text(inputValAssociatedAdd); 
+                    $(qty_box_counter_Id).addClass("has-product"); 
+                }else{
+                    $(qty_box_counter_Id).text("+"); 
+                    $(qty_box_counter_Id).removeClass("has-product");
+                }
+
+                if(inputValAssociatedAdd == 1){
+                    $("#associated_product_qty_minus_id_"+product_id+section).addClass("delete-qty-minus"); 
+                }else{
+                    $("#associated_product_qty_minus_id_"+product_id+section).removeClass("delete-qty-minus");
+                }
+            }
+
+        });
+    </script>  
+    <!--qty Box end -->   
+<?php } ?>
+
+

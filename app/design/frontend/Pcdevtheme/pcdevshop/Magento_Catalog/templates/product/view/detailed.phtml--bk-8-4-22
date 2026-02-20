@@ -1,0 +1,90 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// phpcs:disable Magento2.Templates.ThisInTemplate.FoundThis
+
+/**
+ * Product description template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Description
+ */
+?>
+<div class="details-description-outer">
+<div class="details-description-inner">
+<div class="details-description-left">
+<div class="details-description-left-content">
+<p>
+Suspendisse faucibus ullamcorper nibh id efficitur. Donec efficitur lacinia dictum. Integer urna augue, vulputate in gravida vel, ultrices sed nibh. Cras in nisl at nisi volutpat sodales. Vivamus faucibus nisl tortor, non lobortis nunc auctor ac. Nunc faucibus metus at orci tempor, faucibus pulvinar risus pharetra.
+<br>
+Maecenas condimentum erat eu nibh finibus, eu dapibus enim varius. Aliquam quis tincidunt sapien. Vivamus sodales efficitur ligula, nec porta orci accumsan vitae. Phasellus facilisis in tellus nec imperdiet. Vestibulum sed augue libero.
+</p>
+<h1>Benefits</h1>
+<h2>Low in Fat, Rich in Vitamins</h2>
+
+<p>Ullamcorper nec laoreet in, placerat nec ligula. Donec facilisis aliquam porta. Integer varius ut nisi et posuere. </p>
+
+<p>Nulla et diam eget nisi maximus malesuada sed sed felis. Aliquam ut dui et lorem elementum bibendum. Suspendisse nec lectus at eros gravida dapibus vel imperdiet nulla. Morbi dictum, leo sit amet interdum hendrerit, metus dui vehicula purus, a scelerisque mauris sapien vel felis.</p>
+
+<h2>Natural Energy Booster</h2>
+
+<p>Pellentesque consectetur porttitor dolor, et bibendum turpis sodales ac. Suspendisse potenti. Vivamus luctus blandit egestas. Nullam consequat elit ante, id congue nulla feugiat nec. Nam convallis mauris et sem imperdiet scelerisque. Nulla fermentum nulla vel ante malesuada sollicitudin. Morbi lacinia semper pretium. </p>
+
+<p>Nulla et diam eget nisi maximus malesuada sed sed felis. Aliquam ut dui et lorem elementum bibendum. Suspendisse nec lectus at eros gravida dapibus vel imperdiet nulla. Morbi dictum, leo sit amet interdum hendrerit, metus dui vehicula purus, a scelerisque mauris sapien vel felis.</p>
+
+</div>
+</div>
+
+<div class="details-description-right">
+<div class="details-description-right-content">
+<div class="details-description-ingredients">
+<h2>Ingredients</h2>
+<p>Dates (Contains pits). REFRIGERATE UPON RECEIVING Packaged in the same facility as peanuts, tree nuts, soy, and milk products.</p>
+</div>
+<div class="details-description-nutrition">
+<h2>Nutrition Facts</h2>
+<span>Serving size 28g (~1 oz.)</span>
+<p class="highlight">Amount per serving</p>
+<table>
+<tr>
+<td>Calories</td>
+<td>78</td>
+</tr>
+<tr>
+<td>Total Fat</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Cholesterol</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Sodium</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Calcium</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Iron</td>
+<td>0%</td>
+</tr>
+</table>
+</div>
+<div class="details-description-ingredients">
+<h2>Closest store by</h2>
+<p>Lorem lipsum1, Lorem lipsum2, Lorem lipsum3, Lorem lipsum4, Lorem lipsum5, Lorem lipsum6, Lorem lipsum7</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+

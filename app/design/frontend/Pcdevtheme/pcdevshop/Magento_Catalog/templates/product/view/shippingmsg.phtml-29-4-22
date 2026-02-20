@@ -1,0 +1,4 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+<div class="details-delivery"><p><span>Free Delivery<span> on orders above AED 45.00</span></span></p></div>

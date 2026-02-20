@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <widgets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:helloworld:Magento_Widget:etc/widget.xsd">
 	<widget class="Pcdev\Topsellingproducts\Block\Widget\Topsellingproductsblk" id="citytech_topsellingproducts_topsellingproducts" ttl="1">
-		<label>Bayara Top Selling Products</label>
+		<label>Pcdevtheme Top Selling Products</label>
 		<description>Top Selling Product List</description>
 		<parameters>
             <parameter name="topsellingtitle" xsi:type="text" sort_order="10" visible="true">

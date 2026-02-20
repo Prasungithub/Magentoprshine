@@ -1,0 +1,106 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+?>
+<?php /** @var $block \Magento\Checkout\Block\Onepage\Success */ ?>
+
+<?php
+$shipmentblock = $block->getLayout()->createBlock('Magento\Sales\Block\Order\PrintOrder\Shipment');
+$order = $shipmentblock->getOrder();
+
+?>
+<div class="checkout-success">
+    <?php if ($block->getOrderId()) :?>
+		<div class="msg_area">
+			<h1><?= $block->escapeHtml(__('Thank you for your purchase!')) ?></h1>
+		</div>
+	
+		<div class="msg_area_two">
+			<p><span></span><?= $block->escapeHtml(__('Registration: A letter with further instructions will be sent to your email.')) ?></p>
+		</div>	
+	
+        <?php if ($block->getCanViewOrder()) :?>
+            <p><?= $block->escapeHtml(__('Your order number is: %1.', sprintf('<a href="%s" class="order-number"><strong>%s</strong></a>', $block->escapeUrl($block->getViewOrderUrl()), $block->getOrderId())), ['a', 'strong']) ?></p>
+        <?php  else :?>
+            <p><?= $block->escapeHtml(__('Your order # is: <span>%1</span>.', $block->getOrderId()), ['span']) ?></p>
+        <?php endif;?>
+            <p><?= $block->escapeHtml(__('We\'ll email you an order confirmation with details and tracking info.')) ?></p>
+    <?php endif;?>
+
+    <?= $block->getAdditionalInfoHtml() ?>
+	
+	<div class="order_dtls_area"> 
+		<div class="order_dtls_header">
+			<div class="order_dtl_text"><?= $block->escapeHtml(__('Order details:')) ?></div>
+			<div class="order_dtl_date"><?= $block->escapeHtml(__('Order date: ')) ?>April 27, 2022</div>
+		</div>
+		
+		<div class="success_shipm_dtl">
+			<div class="block-content">
+				<div class="box box-order-shipping-address">
+					<div class="box-title">
+						<strong><?= $escaper->escapeHtml(__('Shipping Address')) ?></strong>
+					</div>
+					<div class="box-content">
+						<address><?= $block->getShipmentAddressFormattedHtml($shipment) ?></address>
+					</div>
+				</div>
+
+				<div class="box box-order-shipping-method">
+					<div class="box-title">
+						<strong><?= $escaper->escapeHtml(__('Shipping Method')) ?></strong>
+					</div>
+					<div class="box-content">
+					<?= $escaper->escapeHtml($block->getObjectData($order, 'shipping_description')) ?>
+					<?php $tracks = $block->getShipmentTracks($shipment);
+					if ($tracks): ?>
+						<dl class="order-tracking">
+						<?php foreach ($tracks as $track): ?>
+							<dt class="tracking-title">
+								<?= $escaper->escapeHtml($block->getObjectData($track, 'title')) ?>
+							</dt>
+							<dd class="tracking-content">
+								<?= $escaper->escapeHtml($block->getObjectData($track, 'number')) ?>
+							</dd>
+						<?php endforeach; ?>
+						</dl>
+					<?php endif; ?>
+					</div>
+				</div>
+
+				<div class="box box-order-billing-address">
+					<div class="box-title">
+						<strong><?= $escaper->escapeHtml(__('Billing Address')) ?></strong>
+					</div>
+					<div class="box-content">
+						<address><?= $block->getBillingAddressFormattedHtml($order) ?></address>
+					</div>
+				</div>
+
+				<div class="box box-order-billing-method">
+					<div class="box-title">
+						<strong><?= $escaper->escapeHtml(__('Payment Method')) ?></strong>
+					</div>
+					<div class="box-content">
+						<?= $block->getPaymentInfoHtml() ?>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="success_ord_items_dtl">
+			<?php echo $this->getLayout()->createBlock("Magento\Sales\Block\Order\Items")->setTemplate("Magento_Sales::order/items.phtml")->toHtml() ?>
+			<?php echo $this->getLayout()->createBlock("Magento\Sales\Block\Order\Totals")->setTemplate("Magento_Sales::order/totals.phtml")->toHtml() ?>
+		</div>	
+	
+	</div>
+
+    <div class="actions-toolbar">
+        <div class="primary">
+            <a class="action primary continue" href="<?= $block->escapeUrl($block->getContinueUrl()) ?>"><span><?= $block->escapeHtml(__('Continue Shopping')) ?></span></a>
+        </div>
+    </div>
+</div>

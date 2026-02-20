@@ -824,7 +824,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 		$tracking_number = $order->getIncrementId();
 		$delivery_profile_type = ''; // optional, one of “ondemand” | “sameday” | “nextday” | “customer”
 		$delivery_profile_id = '';
-		$brand_name = ''; // Bayara optional
+		$brand_name = ''; // Pcdevtheme optional
 		$date = ''; // sets the expected date for delivery in the format "YYYY-MM-DD"
 		$pickup_time = ''; // optional, sets the expected time for a pickup in the format HHMM
 		$drop_time = ''; // optional, sets the expected time of day for a drop in the format HHMM.
@@ -942,7 +942,7 @@ class View extends \Magento\Backend\Block\Widget\Container
 		$swftboxOrderData = array(
 						"pickup_location_id"=>$pickup_location_id,
 						"pickup_location"=>array(
-								"name"=>"Bayara",
+								"name"=>"Pcdevtheme",
 								"phone"=>"971547939001",
 								"address"=>"Dubai Investment Park 2",
 								"latitude"=>24.9745,

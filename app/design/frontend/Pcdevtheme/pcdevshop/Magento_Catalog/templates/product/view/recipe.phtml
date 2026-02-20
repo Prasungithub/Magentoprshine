@@ -1,0 +1,65 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+<?php
+$recipeBlock=  $this->getLayout()->createBlock('Mageside\Recipe\Block\Frontend\Recipe\RecipeListByIngredients');
+$recipes = $recipeBlock->getAvailableRecipeCollection($_product->getId());
+$recipesCount = count($recipes);
+?>
+
+<?php if($recipesCount > 0) { ?>
+    <div class="recipe" id="recipe_range" product_id="<?= $_product->getId(); ?>" ><a href="javascript:void(0);">Full Recipe Range</a></div>
+
+    
+    <div id="recipe_modal" class="rev-frm">
+        <div class="modal-body-content rev-frm-cntn">
+            <div id="recipe-range-loader" style="display: none;"></div>             
+            <div id="recipe_range_items"></div>            
+        </div>
+    </div>
+ 
+    <script type="text/javascript">
+        require([
+            "jquery",
+            "Magento_Ui/js/modal/modal"
+        ],function($, modal) {
+            var recipt_heading = "<?= $_product->getName(); ?> - Recipe Range (<?= $recipesCount; ?> Recipes)";           
+            var options = {
+                type: 'popup',
+                responsive: true,
+                title: recipt_heading,
+                buttons: [{
+                    text: $.mage.__('Okay'),
+                    class: '',
+                    click: function () {
+                        this.closeModal();
+                    }
+                }]
+            };
+
+            var popup = modal(options, $('#recipe_modal'));
+            $("#recipe_range").click(function() {
+                $('#recipe_modal').modal('openModal');
+                getRecipeRange();
+            });
+
+
+            function getRecipeRange(){            
+                var url = "/recipe/recipe/byingredients/ingredient_id/<?= $_product->getId(); ?>";
+                //jQuery("body").loader("show");
+                $(".recipe-range-loader").show();            
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { }, // serializes the form's elements.
+                    success: function (data)
+                    {
+                        $("#recipe_range_items").html(data.recipes); 
+                        $(".recipe-range-loader").hide();
+                       //jQuery("body").loader("hide");
+                    }
+                });  
+            }
+        });
+    </script>
+<?php } ?>

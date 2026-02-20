@@ -1,0 +1,72 @@
+<?php
+$_product = $block->getProduct(); // GET THE PRODUCT
+?>
+<div class="details-delivery"><p><span>Free Delivery<span> on orders above AED 45.00</span></span></p></div>
+<?php $_product = $block->getProduct(); ?>
+<?php
+$IdDoProduto = $_product->getId();
+
+$product_id = $IdDoProduto ;
+
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+ $cart = $objectManager->get('\Magento\Checkout\Model\Session'); 
+
+// retrieve quote items collection
+$itemsCollection = $cart->getQuote()->getItemsCollection();
+
+// get array of all items what can be display directly
+$itemsVisible = $cart->getQuote()->getAllVisibleItems();
+
+// retrieve quote items array
+ $items = $cart->getQuote()->getAllItems();
+
+foreach($items as $item) {
+	
+	 if($IdDoProduto == $item->getProduct_id()){
+           $cart_qty = $item->getQty();
+		   $item_id = $item->getId();
+	?>
+ 
+
+<form data-product-sku="Cashew galore tray" action="https://pcdevtheme.task2bill.com/checkout/cart/updateItemOptions/id/<?php echo $item_id; ?>/" method="post" id="product_addtocart_form" novalidate="novalidate" style="display:none;">
+        <input type="hidden" name="product" value="<?php echo $IdDoProduto; ?>">
+        <input type="hidden" name="selected_configurable_option" value="">
+        <input type="hidden" name="related_product" id="related-products-field" value="">
+        <input type="hidden" name="item" value="<?php echo $item_id; ?>">
+        <input name="form_key" type="hidden" value="24g7G9Qc51gPjx44"> <div class="box-tocart update">
+        <fieldset class="fieldset">
+                            
+                            <input type="number" name="qty" id="qty" min="0" value="<?php echo $cart_qty; ?>" class="update_qty" title="Qty">
+                            
+                        <div class="actions">
+                <button type="submit" title="Update Cart" class="action primary tocart" id="product-updatecart-button">
+                    <span>Update Cart</span>
+                </button>
+                            </div>
+        </fieldset>
+    </div>
+    
+	
+	<script type="text/javascript">
+	
+ 
+	require(['jquery', 'jquery/ui'], function($){
+		$(document).ready( function() {
+ 
+			setTimeout(function () {
+					$(".associated-product-qty-minus").click(function(event){
+				 
+					$('#product-updatecart-button').trigger("click");
+					
+					event.preventDefault();
+				});
+			}, 100);
+		});
+	});
+ 
+</script>
+</form>
+<?php
+	}         
+  }
+ ?>
