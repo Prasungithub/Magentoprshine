@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="pcdev_enquiry_form" resource="default" engine="innodb" comment="Enquiry Form Table">
+        <column xsi:type="int" name="enq_id" unsigned="true" nullable="false" identity="true"
+                comment="Enquiry ID"/>
+		<column xsi:type="varchar" name="name" nullable="false" length="255" comment="Name"/>
+		<column xsi:type="varchar" name="email" nullable="false" length="255" comment="Email"/>
+		<column xsi:type="varchar" name="subject" nullable="false" length="64" comment="Enquiry Subject"/>
+		<column xsi:type="varchar" name="mobileno" nullable="false" length="255" comment="Mobile Number"/>
+		<column xsi:type="varchar" name="comment" nullable="false" length="255" comment="Comment"/>				
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Creation Time"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Update Time"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="enq_id"/>
+        </constraint>
+    </table>
+</schema>

@@ -1,0 +1,69 @@
+<div class="enqform-area">
+   <form class="form contact"
+         action="<?php echo $this->getUrl('enquiryinf/enquiry/save', ['_secure' => true]);?>"
+         id="custom-form"
+         method="post"
+         data-hasrequired="<?php  echo __('* Required Fields') ?>"
+         data-mage-init='{"validation":{}}'>
+	   <input type="hidden" name="form_key" value="<?php echo $this->getFormKey(); ?>" />
+       <fieldset class="fieldset">
+           <legend class="legend"><span><?php  echo __("Happy to know your query") ?></span></legend><br />
+           <div class="field name required">
+               <label class="label" for="name"><span><?php  echo __('Name') ?></span></label>
+               <div class="control">
+                   <input name="name" id="name" title="<?php  echo __('Name') ?>" class="input-text" type="text" data-validate="{required:true}"/>
+               </div>
+           </div>
+
+           <div class="field email required">
+               <label class="label" for="email"><span><?php  echo __('Email') ?></span></label>
+               <div class="control">
+                   <input name="email" id="email" title="<?php  echo __('Email') ?>" class="input-text" type="email" data-validate="{required:true, 'validate-email':true}"/>
+               </div>
+           </div>
+
+           <div class="field subject required">
+               <label class="label" for="subject"><span><?php echo __('Subject') ?></span></label>
+               <div class="control">
+                   <select name="subject" id="subject" data-validate="{required:true, 'validate-select':true}">
+					   <option value=""><?php echo __('Please Select')?></option>
+                       <option value="General"><?php echo __('General')?></option>
+					   <option value="Business"><?php echo __('Business')?></option>
+					   <option value="Career"><?php echo __('Career')?></option>
+                   </select>
+               </div>
+           </div>
+
+           <div class="field mobileno required">
+               <label class="label" for="mobileno"><span><?php  echo __('Mobile Number') ?></span></label>
+               <div class="control">
+                   <input name="mobileno" id="mobileno" title="<?php  echo __('Mobile Number') ?>" value="" class="input-text" type="text" data-validate="{required:true, 'validate-number':true, minlength:10, maxlength:10}" />
+               </div>
+           </div>
+
+           <div class="field comment required">
+               <label class="label" for="comment"><span><?php  echo __('What’s on your mind?') ?></span></label>
+               <div class="control">
+                   <textarea name="comment" id="comment" title="<?php  echo __('What’s on your mind?') ?>" class="input-text" cols="5" rows="3" data-validate="{required:true}"></textarea>
+               </div>
+           </div>
+       </fieldset>
+
+       <div class="actions-toolbar">
+           <div class="primary">
+               <button type="submit" title="<?php  echo __('Submit') ?>" class="action submit primary" id="custom_btn">
+                   <span><?php  echo __('Submit') ?></span>
+               </button>
+           </div>
+       </div>
+   </form>
+</div>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Magento_Customer/js/block-submit-on-send": {
+                "formId": "custom-form"
+            }
+        }
+    }
+</script>
